@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="TaagBack.Api/TaagBack.Api.csproj" />
+  <Project Path="TaagBack.Tests/TaagBack.Tests.csproj" />
+</Solution>
