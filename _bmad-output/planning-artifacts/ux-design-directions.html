@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaagBack - Design Direction Mockups</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg-primary: #0A0A0F;
+    --bg-secondary: #161622;
+    --bg-tertiary: #1E1E2E;
+    --bg-warm: #1A1820;
+    --bg-map: #12121C;
+    --text-primary: #F0EDE8;
+    --text-secondary: #9893A3;
+    --text-disabled: #4A4458;
+    --accent-pioneer: #FFD166;
+    --accent-claim: #72F2EB;
+    --accent-rival: #FF6B9D;
+    --accent-hunt: #4ADE80;
+    --accent-alert: #FB923C;
+    --accent-ghost: #A78BFA;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #050508;
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  /* Navigation */
+  .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(10,10,15,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(114,242,235,0.15);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .nav h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent-claim);
+    text-shadow: 0 0 12px rgba(114,242,235,0.4);
+    margin-right: 16px;
+  }
+  .nav-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 6px 12px;
+    border: 1px solid var(--text-disabled);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .nav-btn:hover { border-color: var(--accent-claim); color: var(--accent-claim); }
+  .nav-btn.active {
+    border-color: var(--accent-claim);
+    color: var(--bg-primary);
+    background: var(--accent-claim);
+  }
+
+  /* Sections */
+  .direction-section {
+    display: none;
+    min-height: 100vh;
+    padding: 80px 24px 48px;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .direction-section.active { display: block; }
+
+  .section-header {
+    margin-bottom: 32px;
+  }
+  .section-header h2 {
+    font-family: 'Space Mono', monospace;
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+  .section-header p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .section-header .tag {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border: 1px solid;
+    margin-top: 8px;
+    margin-right: 6px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* Phone Frame */
+  .phone {
+    width: 375px;
+    height: 812px;
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+    margin: 24px auto;
+    border: 2px solid rgba(255,255,255,0.08);
+  }
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    position: relative;
+  }
+  .phone-screen::-webkit-scrollbar { width: 0; }
+
+  .status-bar {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* Direction 1: Full Arcade */
+  .d1 .phone { border-color: rgba(114,242,235,0.3); box-shadow: 0 0 40px rgba(114,242,235,0.1), inset 0 0 40px rgba(114,242,235,0.03); }
+  .d1 .phone-screen { background: var(--bg-primary); }
+
+  .d1 .scan-result {
+    padding: 24px;
+    text-align: center;
+  }
+  .d1 .scan-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent-pioneer);
+    text-shadow: 0 0 16px rgba(255,209,102,0.6);
+    margin-bottom: 16px;
+    animation: glowPulse 2s ease-in-out infinite;
+  }
+  @keyframes glowPulse {
+    0%, 100% { text-shadow: 0 0 16px rgba(255,209,102,0.6); }
+    50% { text-shadow: 0 0 24px rgba(255,209,102,0.9), 0 0 48px rgba(255,209,102,0.3); }
+  }
+  .d1 .scan-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    text-shadow: 0 0 20px rgba(240,237,232,0.3);
+    margin-bottom: 8px;
+    line-height: 1.1;
+  }
+  .d1 .scan-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+  }
+
+  .d1 .taag-card-pioneer {
+    background: var(--bg-secondary);
+    border: 2px solid var(--accent-pioneer);
+    border-radius: 4px;
+    padding: 24px;
+    margin: 0 auto 24px;
+    max-width: 320px;
+    position: relative;
+    box-shadow: 0 0 20px rgba(255,209,102,0.15), inset 0 0 20px rgba(255,209,102,0.05);
+  }
+  .d1 .taag-card-pioneer::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255,209,102,0.03) 2px,
+      rgba(255,209,102,0.03) 4px
+    );
+    pointer-events: none;
+  }
+  .d1 .card-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent-pioneer);
+    margin-bottom: 4px;
+  }
+  .d1 .card-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+  }
+  .d1 .card-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .d1 .card-stat {
+    text-align: center;
+  }
+  .d1 .stat-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent-pioneer);
+    text-shadow: 0 0 10px rgba(255,209,102,0.4);
+  }
+  .d1 .stat-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .d1 .name-input-area {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--text-disabled);
+    border-radius: 2px;
+    padding: 16px;
+    margin: 0 24px 16px;
+    text-align: center;
+  }
+  .d1 .name-input-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-pioneer);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .d1 .name-input {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--accent-pioneer);
+    padding-bottom: 4px;
+  }
+  .d1 .name-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 22px;
+    background: var(--accent-pioneer);
+    vertical-align: middle;
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  .d1 .suggestions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 12px 24px;
+    flex-wrap: wrap;
+  }
+  .d1 .suggestion {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 6px 12px;
+    border: 1px solid var(--text-disabled);
+    color: var(--text-secondary);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  .d1 .suggestion:hover { border-color: var(--accent-pioneer); color: var(--accent-pioneer); }
+
+  .d1 .action-btn {
+    display: block;
+    width: calc(100% - 48px);
+    margin: 24px auto;
+    padding: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: var(--accent-pioneer);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    text-shadow: none;
+    box-shadow: 0 0 20px rgba(255,209,102,0.3);
+  }
+
+  /* Scanline overlay for D1 */
+  .d1 .phone-screen::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* Direction 2: Clean Explorer */
+  .d2 .phone { border-color: rgba(255,255,255,0.12); }
+  .d2 .phone-screen { background: var(--bg-primary); }
+
+  .d2 .top-bar {
+    padding: 0 24px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .d2 .top-bar h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  .d2 .top-bar p {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .d2 .scan-result-clean {
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .d2 .result-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(114,242,235,0.1);
+    border: 2px solid var(--accent-claim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 28px;
+  }
+  .d2 .result-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .d2 .result-meta {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+
+  .d2 .info-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 0 24px 16px;
+    text-align: left;
+  }
+  .d2 .info-card h4 {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .d2 .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .d2 .info-row:last-child { border: none; }
+  .d2 .info-label { font-size: 14px; color: var(--text-secondary); }
+  .d2 .info-value { font-family: 'Space Mono', monospace; font-size: 14px; }
+
+  .d2 .clean-stats {
+    display: flex;
+    gap: 12px;
+    padding: 0 24px;
+    margin-bottom: 24px;
+  }
+  .d2 .clean-stat {
+    flex: 1;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .d2 .clean-stat-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent-claim);
+  }
+  .d2 .clean-stat-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  .d2 .clean-btn {
+    display: block;
+    width: calc(100% - 48px);
+    margin: 16px auto;
+    padding: 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    background: var(--accent-claim);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .d2 .clean-btn.secondary {
+    background: transparent;
+    border: 1px solid var(--text-disabled);
+    color: var(--text-secondary);
+  }
+
+  /* Direction 3: Passport Forward */
+  .d3 .phone { border-color: rgba(255,209,102,0.2); }
+  .d3 .phone-screen { background: var(--bg-warm); }
+
+  .d3 .passport-header {
+    padding: 16px 24px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,209,102,0.1);
+  }
+  .d3 .passport-header h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent-pioneer);
+  }
+  .d3 .passport-header p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  .d3 .passport-page {
+    padding: 24px;
+    background: linear-gradient(135deg, #1A1820, #1E1A20);
+    margin: 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,209,102,0.08);
+    min-height: 500px;
+    position: relative;
+  }
+  .d3 .passport-page::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 16px;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFD166' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .d3 .stamp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+  }
+  .d3 .stamp {
+    aspect-ratio: 1;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    position: relative;
+    transition: transform 0.2s;
+  }
+  .d3 .stamp:hover { transform: scale(1.05) rotate(-2deg); }
+  .d3 .stamp.owned {
+    background: rgba(114,242,235,0.08);
+    border: 2px solid var(--accent-claim);
+    box-shadow: 0 0 12px rgba(114,242,235,0.1);
+  }
+  .d3 .stamp.ghost {
+    background: rgba(167,139,250,0.08);
+    border: 2px dashed var(--accent-ghost);
+  }
+  .d3 .stamp.rival {
+    background: rgba(255,107,157,0.05);
+    border: 1px solid rgba(255,107,157,0.3);
+    opacity: 0.7;
+  }
+  .d3 .stamp.empty {
+    border: 1px dashed rgba(255,255,255,0.08);
+    opacity: 0.3;
+  }
+  .d3 .stamp-icon { font-size: 24px; margin-bottom: 4px; }
+  .d3 .stamp-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    text-align: center;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+  }
+  .d3 .stamp-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bg-primary);
+    font-weight: 700;
+  }
+
+  .d3 .page-indicator {
+    text-align: center;
+    padding: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text-disabled);
+    letter-spacing: 4px;
+  }
+
+  /* Direction 4: Terminal Hacker */
+  .d4 .phone { border-color: rgba(74,222,128,0.3); box-shadow: 0 0 30px rgba(74,222,128,0.08); }
+  .d4 .phone-screen { background: #080C08; }
+
+  .d4 .terminal-header {
+    padding: 12px 16px;
+    background: rgba(74,222,128,0.05);
+    border-bottom: 1px solid rgba(74,222,128,0.15);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-hunt);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .d4 .leaderboard {
+    padding: 8px;
+  }
+  .d4 .lb-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent-hunt);
+    padding: 12px 8px 8px;
+    border-bottom: 1px solid rgba(74,222,128,0.1);
+  }
+  .d4 .lb-header {
+    display: grid;
+    grid-template-columns: 40px 1fr 80px 60px;
+    padding: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text-disabled);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .d4 .lb-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 80px 60px;
+    padding: 10px 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+    align-items: center;
+    transition: background 0.15s;
+  }
+  .d4 .lb-row:hover { background: rgba(74,222,128,0.03); }
+  .d4 .lb-row.you { background: rgba(114,242,235,0.05); border-left: 2px solid var(--accent-claim); }
+  .d4 .lb-rank { color: var(--text-disabled); }
+  .d4 .lb-rank.top3 { color: var(--accent-pioneer); text-shadow: 0 0 8px rgba(255,209,102,0.4); }
+  .d4 .lb-name { color: var(--text-primary); }
+  .d4 .lb-name.you-name { color: var(--accent-claim); }
+  .d4 .lb-score { text-align: right; color: var(--accent-hunt); }
+  .d4 .lb-streak { text-align: right; color: var(--text-secondary); font-size: 11px; }
+
+  .d4 .terminal-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(74,222,128,0.08);
+    margin: 8px;
+    border: 1px solid rgba(74,222,128,0.15);
+  }
+  .d4 .t-stat {
+    background: #080C08;
+    padding: 12px 8px;
+    text-align: center;
+  }
+  .d4 .t-stat-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent-hunt);
+    text-shadow: 0 0 10px rgba(74,222,128,0.3);
+  }
+  .d4 .t-stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--text-disabled);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+
+  .d4 .tab-bar {
+    display: flex;
+    gap: 1px;
+    padding: 8px;
+  }
+  .d4 .tab {
+    flex: 1;
+    padding: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+    color: var(--text-disabled);
+    border: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+  }
+  .d4 .tab.active {
+    color: var(--accent-hunt);
+    border-color: var(--accent-hunt);
+    background: rgba(74,222,128,0.05);
+  }
+
+  /* Direction 5: Balanced Blend */
+  .d5 .phone { border-color: rgba(114,242,235,0.15); }
+  .d5 .phone-screen { background: var(--bg-primary); }
+
+  .d5 .blend-header {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .d5 .blend-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .d5 .blend-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .d5 .hunt-card {
+    margin: 0 16px 12px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .d5 .hunt-card-img {
+    height: 120px;
+    background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-map));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .d5 .hunt-card-img .route-preview {
+    font-size: 48px;
+    opacity: 0.3;
+  }
+  .d5 .hunt-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 4px 8px;
+    background: rgba(74,222,128,0.15);
+    border: 1px solid var(--accent-hunt);
+    color: var(--accent-hunt);
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .d5 .hunt-stops-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 4px 8px;
+    background: rgba(0,0,0,0.6);
+    color: var(--text-secondary);
+    border-radius: 2px;
+  }
+  .d5 .hunt-card-body { padding: 16px; }
+  .d5 .hunt-card-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .d5 .hunt-card-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-bottom: 12px;
+  }
+  .d5 .hunt-card-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-disabled);
+  }
+  .d5 .hunt-card-meta span { font-family: 'Space Mono', monospace; }
+
+  .d5 .creator-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--bg-warm);
+    border-radius: 14px;
+    margin: 0 16px 12px;
+    border: 1px solid rgba(255,209,102,0.1);
+  }
+  .d5 .creator-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-pioneer), var(--accent-alert));
+  }
+  .d5 .creator-name {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .d5 .creator-name strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .d5 .bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10,10,15,0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    padding: 8px 0 28px;
+  }
+  .d5 .bottom-nav-item {
+    flex: 1;
+    text-align: center;
+    padding: 8px 0;
+    cursor: pointer;
+  }
+  .d5 .bottom-nav-icon { font-size: 22px; margin-bottom: 2px; }
+  .d5 .bottom-nav-label {
+    font-size: 10px;
+    color: var(--text-disabled);
+  }
+  .d5 .bottom-nav-item.active .bottom-nav-label { color: var(--accent-claim); }
+  .d5 .scan-fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--accent-claim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin: -20px auto 0;
+    box-shadow: 0 0 20px rgba(114,242,235,0.3);
+    border: 3px solid var(--bg-primary);
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Direction 6: Skate Zine */
+  .d6 .phone { border-color: rgba(255,107,157,0.3); box-shadow: 0 0 30px rgba(255,107,157,0.08); }
+  .d6 .phone-screen { background: var(--bg-primary); }
+
+  .d6 .zine-header {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .d6 .zine-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    text-shadow: 3px 3px 0 var(--accent-rival), 0 0 20px rgba(255,107,157,0.3);
+    line-height: 1;
+  }
+  .d6 .zine-issue {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text-disabled);
+    writing-mode: vertical-rl;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .d6 .sticker-wall {
+    padding: 8px 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .d6 .die-cut {
+    padding: 10px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .d6 .die-cut:hover { transform: rotate(-3deg) scale(1.05); }
+  .d6 .die-cut.cyan {
+    color: var(--accent-claim);
+    border: 2px solid var(--accent-claim);
+    border-radius: 14px;
+    transform: rotate(-2deg);
+    box-shadow: 3px 3px 0 rgba(114,242,235,0.2);
+  }
+  .d6 .die-cut.gold {
+    color: var(--bg-primary);
+    background: var(--accent-pioneer);
+    border-radius: 4px 14px 4px 14px;
+    transform: rotate(1deg);
+    box-shadow: 3px 3px 0 rgba(255,209,102,0.3);
+  }
+  .d6 .die-cut.pink {
+    color: var(--accent-rival);
+    border: 2px solid var(--accent-rival);
+    border-radius: 50px;
+    transform: rotate(3deg);
+    box-shadow: 3px 3px 0 rgba(255,107,157,0.2);
+  }
+  .d6 .die-cut.green {
+    color: var(--bg-primary);
+    background: var(--accent-hunt);
+    border-radius: 8px;
+    transform: rotate(-1deg);
+    box-shadow: 3px 3px 0 rgba(74,222,128,0.3);
+  }
+  .d6 .die-cut.purple {
+    color: var(--accent-ghost);
+    border: 2px dashed var(--accent-ghost);
+    border-radius: 4px;
+    transform: rotate(2deg);
+    box-shadow: 3px 3px 0 rgba(167,139,250,0.2);
+  }
+
+  .d6 .zine-section {
+    margin: 16px 12px;
+    padding: 20px 16px;
+    border: 2px solid var(--text-disabled);
+    position: relative;
+  }
+  .d6 .zine-section-title {
+    position: absolute;
+    top: -10px;
+    left: 12px;
+    background: var(--bg-primary);
+    padding: 0 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent-rival);
+  }
+
+  .d6 .zine-taag-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.06);
+  }
+  .d6 .zine-taag-row:last-child { border: none; }
+  .d6 .zine-taag-stamp {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .d6 .zine-taag-stamp.owned {
+    background: rgba(114,242,235,0.1);
+    border: 2px solid var(--accent-claim);
+    transform: rotate(-3deg);
+  }
+  .d6 .zine-taag-stamp.rival-stamp {
+    background: rgba(255,107,157,0.08);
+    border: 2px solid rgba(255,107,157,0.3);
+    transform: rotate(2deg);
+  }
+  .d6 .zine-taag-stamp.ghost-stamp {
+    background: rgba(167,139,250,0.08);
+    border: 2px dashed var(--accent-ghost);
+    transform: rotate(-1deg);
+  }
+  .d6 .zine-taag-info { flex: 1; }
+  .d6 .zine-taag-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .d6 .zine-taag-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .d6 .zine-taag-claim {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 4px 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .d6 .deck-art {
+    margin: 20px 12px;
+    height: 160px;
+    background: linear-gradient(135deg, #1a0a1e, #0a1a1e);
+    border: 2px solid var(--accent-rival);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .d6 .deck-art::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(255,107,157,0.03) 10px,
+      rgba(255,107,157,0.03) 20px
+    );
+  }
+  .d6 .deck-art-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    text-shadow: 4px 4px 0 var(--accent-rival), -1px -1px 0 var(--accent-claim);
+    position: relative;
+    z-index: 1;
+  }
+  .d6 .deck-art-sub {
+    position: absolute;
+    bottom: 12px;
+    right: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-disabled);
+    z-index: 1;
+  }
+
+  /* Compare View */
+  .compare-section {
+    display: none;
+    padding: 80px 24px 48px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .compare-section.active { display: block; }
+  .compare-section h2 {
+    font-family: 'Space Mono', monospace;
+    font-size: 24px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .compare-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 32px;
+  }
+  .compare-card {
+    text-align: center;
+  }
+  .compare-card h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    margin-bottom: 4px;
+    color: var(--accent-claim);
+  }
+  .compare-card p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+  .compare-card .phone {
+    transform: scale(0.85);
+    transform-origin: top center;
+    margin: 0 auto;
+  }
+
+  /* Color Palette Display */
+  .palette-section {
+    display: none;
+    padding: 80px 24px 48px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .palette-section.active { display: block; }
+  .palette-section h2 {
+    font-family: 'Space Mono', monospace;
+    font-size: 24px;
+    margin-bottom: 32px;
+  }
+  .palette-group {
+    margin-bottom: 32px;
+  }
+  .palette-group h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .palette-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .palette-swatch {
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .palette-swatch .swatch-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  .palette-swatch .swatch-hex {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    opacity: 0.7;
+  }
+
+  .type-showcase {
+    margin-top: 32px;
+  }
+  .type-showcase .type-sample {
+    margin-bottom: 16px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+  .type-showcase .type-meta {
+    flex-shrink: 0;
+    width: 120px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text-disabled);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <h1>TAAGBACK</h1>
+  <button class="nav-btn active" onclick="showSection('d1')">1. Full Arcade</button>
+  <button class="nav-btn" onclick="showSection('d2')">2. Clean Explorer</button>
+  <button class="nav-btn" onclick="showSection('d3')">3. Passport Forward</button>
+  <button class="nav-btn" onclick="showSection('d4')">4. Terminal Hacker</button>
+  <button class="nav-btn" onclick="showSection('d5')">5. Balanced Blend</button>
+  <button class="nav-btn" onclick="showSection('d6')">6. Skate Zine</button>
+  <button class="nav-btn" onclick="showSection('compare')" style="border-color: var(--accent-pioneer); color: var(--accent-pioneer);">Compare All</button>
+  <button class="nav-btn" onclick="showSection('palette')" style="border-color: var(--accent-ghost); color: var(--accent-ghost);">Palette</button>
+</nav>
+
+<!-- Direction 1: Full Arcade -->
+<section class="direction-section d1 active" id="d1">
+  <div class="section-header">
+    <h2 style="color: var(--accent-pioneer)">1. Full Arcade</h2>
+    <p>Maximum CRT energy. Scan lines, heavy glow, dense layout. Volume Knob cranked to 3. This is TaagBack at its most immersive — the beat-up VHS tape of mobile apps.</p>
+    <span class="tag" style="border-color: var(--accent-pioneer); color: var(--accent-pioneer)">Volume 3</span>
+    <span class="tag" style="border-color: var(--accent-alert); color: var(--accent-alert)">Immersive</span>
+    <span class="tag" style="border-color: var(--accent-rival); color: var(--accent-rival)">Peak Moments Only</span>
+  </div>
+
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span style="letter-spacing: 3px; color: var(--accent-pioneer);">PIONEER</span>
+        <span>100%</span>
+      </div>
+
+      <div class="scan-result">
+        <div class="scan-badge">/// YOU'RE THE FIRST ///</div>
+        <div class="scan-title">UNCLAIMED<br>TAAG</div>
+        <div class="scan-subtitle">No one has ever scanned this code</div>
+      </div>
+
+      <div class="taag-card-pioneer">
+        <div class="card-label">Location</div>
+        <div class="card-value">4th Ave &amp; Pine St, Seattle</div>
+        <div class="card-label">Encoded URL</div>
+        <div class="card-value" style="font-size:11px; color: var(--text-secondary)">bluebottlecoffee.com/menu</div>
+        <div style="height:16px"></div>
+        <div class="card-row">
+          <div class="card-stat">
+            <div class="stat-num">1st</div>
+            <div class="stat-label">Scanner</div>
+          </div>
+          <div class="card-stat">
+            <div class="stat-num">0</div>
+            <div class="stat-label">Claims</div>
+          </div>
+          <div class="card-stat">
+            <div class="stat-num">NEW</div>
+            <div class="stat-label">Status</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="name-input-area">
+        <div class="name-input-label">Name This Taag</div>
+        <div class="name-input">Fourth Wave<span class="name-cursor"></span></div>
+      </div>
+
+      <div class="suggestions">
+        <div class="suggestion">Blue Beacon</div>
+        <div class="suggestion">Pine & Pour</div>
+        <div class="suggestion">Custom...</div>
+      </div>
+
+      <button class="action-btn">CLAIM THIS TAAG</button>
+    </div>
+  </div>
+</section>
+
+<!-- Direction 2: Clean Explorer -->
+<section class="direction-section d2" id="d2">
+  <div class="section-header">
+    <h2 style="color: var(--accent-claim)">2. Clean Explorer</h2>
+    <p>Volume Knob at 0-1. Maximum readability, minimum texture. This is TaagBack's utility baseline — what every screen looks like before celebration layers kick in. Passes the Glance Test easily.</p>
+    <span class="tag" style="border-color: var(--accent-claim); color: var(--accent-claim)">Volume 0-1</span>
+    <span class="tag" style="border-color: var(--accent-hunt); color: var(--accent-hunt)">Utility First</span>
+    <span class="tag" style="border-color: var(--text-secondary); color: var(--text-secondary)">Glance Test Pass</span>
+  </div>
+
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span></span>
+        <span>100%</span>
+      </div>
+
+      <div class="d2 top-bar">
+        <h3>Scan Result</h3>
+        <p>Blue Bottle Coffee, 4th Ave</p>
+      </div>
+
+      <div class="scan-result-clean">
+        <div class="result-icon" style="color: var(--accent-claim)">&#10003;</div>
+        <div class="result-title">Already Claimed</div>
+        <div class="result-meta">Owned by @BrewHunter since Feb 2026</div>
+      </div>
+
+      <div class="d2 clean-stats">
+        <div class="clean-stat">
+          <div class="clean-stat-num">47</div>
+          <div class="clean-stat-label">Total Scans</div>
+        </div>
+        <div class="clean-stat">
+          <div class="clean-stat-num">12</div>
+          <div class="clean-stat-label">Collectors</div>
+        </div>
+        <div class="clean-stat">
+          <div class="clean-stat-num">3</div>
+          <div class="clean-stat-label">In Hunts</div>
+        </div>
+      </div>
+
+      <div class="d2 info-card">
+        <h4>Taag Details</h4>
+        <div class="info-row">
+          <span class="info-label">Name</span>
+          <span class="info-value" style="color: var(--accent-pioneer)">"Fourth Wave"</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Pioneer</span>
+          <span class="info-value">@CoffeeScout</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Controller</span>
+          <span class="info-value" style="color: var(--accent-rival)">@BrewHunter</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Category</span>
+          <span class="info-value">Restaurant</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Last Scanned</span>
+          <span class="info-value">2 days ago</span>
+        </div>
+      </div>
+
+      <button class="d2 clean-btn" style="background: var(--accent-rival); margin-top: 24px;">Watchlist This Taag</button>
+      <button class="d2 clean-btn secondary">Add to Collection</button>
+    </div>
+  </div>
+</section>
+
+<!-- Direction 3: Passport Forward -->
+<section class="direction-section d3" id="d3">
+  <div class="section-header">
+    <h2 style="color: var(--accent-pioneer)">3. Passport Forward</h2>
+    <p>Collection world dominates. Warm backgrounds, sticker corners everywhere, paper textures, stamp grid. This is TaagBack as a well-traveled passport — every page tells a story of where you've been.</p>
+    <span class="tag" style="border-color: var(--accent-pioneer); color: var(--accent-pioneer)">Collection World</span>
+    <span class="tag" style="border-color: var(--accent-claim); color: var(--accent-claim)">Warm Analog</span>
+    <span class="tag" style="border-color: var(--accent-ghost); color: var(--accent-ghost)">Stamp Aesthetic</span>
+  </div>
+
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="status-bar" style="color: var(--accent-pioneer)">
+        <span>9:41</span>
+        <span style="letter-spacing: 2px">MY PASSPORT</span>
+        <span>42 TAAGS</span>
+      </div>
+
+      <div class="passport-header">
+        <h3>Page 3 of 5</h3>
+        <p>Downtown Seattle Collection</p>
+      </div>
+
+      <div class="passport-page">
+        <div class="stamp-grid">
+          <div class="stamp owned">
+            <span class="stamp-badge" style="background: var(--accent-claim)">&#10003;</span>
+            <span class="stamp-icon">&#9749;</span>
+            <span class="stamp-name">Fourth Wave</span>
+          </div>
+          <div class="stamp owned" style="transform: rotate(-2deg)">
+            <span class="stamp-badge" style="background: var(--accent-claim)">&#10003;</span>
+            <span class="stamp-icon">&#127828;</span>
+            <span class="stamp-name">Burger Joint</span>
+          </div>
+          <div class="stamp rival">
+            <span class="stamp-icon">&#128218;</span>
+            <span class="stamp-name">Page Turner</span>
+          </div>
+          <div class="stamp ghost" style="transform: rotate(1deg)">
+            <span class="stamp-icon">&#128123;</span>
+            <span class="stamp-name">Roxy's Ghost</span>
+          </div>
+          <div class="stamp owned" style="transform: rotate(2deg)">
+            <span class="stamp-badge" style="background: var(--accent-pioneer)">&#9733;</span>
+            <span class="stamp-icon">&#127915;</span>
+            <span class="stamp-name">Art Wall</span>
+          </div>
+          <div class="stamp rival" style="transform: rotate(-1deg)">
+            <span class="stamp-icon">&#128652;</span>
+            <span class="stamp-name">Bus Stop 42</span>
+          </div>
+          <div class="stamp owned">
+            <span class="stamp-badge" style="background: var(--accent-claim)">&#10003;</span>
+            <span class="stamp-icon">&#127860;</span>
+            <span class="stamp-name">Noodle Hut</span>
+          </div>
+          <div class="stamp ghost" style="transform: rotate(3deg)">
+            <span class="stamp-icon">&#128123;</span>
+            <span class="stamp-name">BlockVideo</span>
+          </div>
+          <div class="stamp empty"></div>
+        </div>
+      </div>
+
+      <div class="page-indicator">. . 3 . .</div>
+    </div>
+  </div>
+</section>
+
+<!-- Direction 4: Terminal Hacker -->
+<section class="direction-section d4" id="d4">
+  <div class="section-header">
+    <h2 style="color: var(--accent-hunt)">4. Terminal Hacker</h2>
+    <p>Game world dominates. Sharp corners, data-dense, monospace heavy. Leaderboard energy. This is TaagBack as a competitive data terminal — every pixel is information, every number is a ranking.</p>
+    <span class="tag" style="border-color: var(--accent-hunt); color: var(--accent-hunt)">Game World</span>
+    <span class="tag" style="border-color: var(--accent-claim); color: var(--accent-claim)">Data Dense</span>
+    <span class="tag" style="border-color: var(--accent-pioneer); color: var(--accent-pioneer)">Terminal Corners</span>
+  </div>
+
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="terminal-header">
+        <span>TAAGBACK://LEADERBOARD</span>
+        <span style="color: var(--text-disabled)">LIVE</span>
+      </div>
+
+      <div class="d4 tab-bar">
+        <div class="tab active">Sourcers</div>
+        <div class="tab">Hunters</div>
+        <div class="tab">Streaks</div>
+      </div>
+
+      <div class="d4 terminal-stats">
+        <div class="t-stat">
+          <div class="t-stat-num">847</div>
+          <div class="t-stat-label">Players</div>
+        </div>
+        <div class="t-stat">
+          <div class="t-stat-num">12.4K</div>
+          <div class="t-stat-label">Taags</div>
+        </div>
+        <div class="t-stat">
+          <div class="t-stat-num">156</div>
+          <div class="t-stat-label">Hunts</div>
+        </div>
+      </div>
+
+      <div class="leaderboard">
+        <div class="lb-title">Top Sourcers — March 2026</div>
+        <div class="lb-header">
+          <span>#</span>
+          <span>Player</span>
+          <span style="text-align:right">Taags</span>
+          <span style="text-align:right">Streak</span>
+        </div>
+        <div class="lb-row">
+          <span class="lb-rank top3">01</span>
+          <span class="lb-name">@QRQueen</span>
+          <span class="lb-score">342</span>
+          <span class="lb-streak">28d</span>
+        </div>
+        <div class="lb-row">
+          <span class="lb-rank top3">02</span>
+          <span class="lb-name">@NightScanner</span>
+          <span class="lb-score">298</span>
+          <span class="lb-streak">45d</span>
+        </div>
+        <div class="lb-row">
+          <span class="lb-rank top3">03</span>
+          <span class="lb-name">@UrbanHunter</span>
+          <span class="lb-score">276</span>
+          <span class="lb-streak">12d</span>
+        </div>
+        <div class="lb-row">
+          <span class="lb-rank">04</span>
+          <span class="lb-name">@CodeWalker</span>
+          <span class="lb-score">251</span>
+          <span class="lb-streak">8d</span>
+        </div>
+        <div class="lb-row you">
+          <span class="lb-rank">05</span>
+          <span class="lb-name you-name">@You</span>
+          <span class="lb-score" style="color: var(--accent-claim)">234</span>
+          <span class="lb-streak">31d</span>
+        </div>
+        <div class="lb-row">
+          <span class="lb-rank">06</span>
+          <span class="lb-name">@TagMaster</span>
+          <span class="lb-score">219</span>
+          <span class="lb-streak">5d</span>
+        </div>
+        <div class="lb-row">
+          <span class="lb-rank">07</span>
+          <span class="lb-name">@ScanQuest</span>
+          <span class="lb-score">198</span>
+          <span class="lb-streak">15d</span>
+        </div>
+        <div class="lb-row">
+          <span class="lb-rank">08</span>
+          <span class="lb-name">@PioneerPete</span>
+          <span class="lb-score">187</span>
+          <span class="lb-streak">22d</span>
+        </div>
+        <div class="lb-row">
+          <span class="lb-rank">09</span>
+          <span class="lb-name">@GhostFinder</span>
+          <span class="lb-score">165</span>
+          <span class="lb-streak">3d</span>
+        </div>
+        <div class="lb-row">
+          <span class="lb-rank">10</span>
+          <span class="lb-name">@RelicRaider</span>
+          <span class="lb-score">142</span>
+          <span class="lb-streak">41d</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Direction 5: Balanced Blend -->
+<section class="direction-section d5" id="d5">
+  <div class="section-header">
+    <h2 style="color: var(--accent-claim)">5. Balanced Blend</h2>
+    <p>The recommended 50/50 split. Game and Collection worlds clearly distinguished but harmonized. Terminal corners for system data, Sticker corners for personal items. This is TaagBack in daily use — the hunt discovery screen.</p>
+    <span class="tag" style="border-color: var(--accent-claim); color: var(--accent-claim)">Recommended</span>
+    <span class="tag" style="border-color: var(--accent-hunt); color: var(--accent-hunt)">Two Worlds</span>
+    <span class="tag" style="border-color: var(--accent-pioneer); color: var(--accent-pioneer)">Volume 1-2</span>
+  </div>
+
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span></span>
+        <span>100%</span>
+      </div>
+
+      <div class="blend-header">
+        <div class="blend-title">Nearby Hunts</div>
+        <div class="blend-icon-btn">&#9776;</div>
+      </div>
+
+      <div class="creator-tag">
+        <div class="creator-avatar"></div>
+        <div class="creator-name">By <strong>@SeattleSarah</strong> &middot; 4.8 stars</div>
+      </div>
+
+      <div class="hunt-card">
+        <div class="hunt-card-img">
+          <div class="route-preview">&#128506;</div>
+          <span class="hunt-badge">Active</span>
+          <span class="hunt-stops-badge">5 stops</span>
+        </div>
+        <div class="hunt-card-body">
+          <div class="hunt-card-title">Pike Place Pioneer Trail</div>
+          <div class="hunt-card-desc">Discover the hidden history of Seattle's most famous market through 5 QR codes you've walked past a hundred times.</div>
+          <div class="hunt-card-meta">
+            <span>~45 min</span>
+            <span>1.2 mi</span>
+            <span>23 completions</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hunt-card">
+        <div class="hunt-card-img" style="background: linear-gradient(135deg, #1a1020, #0a1520);">
+          <div class="route-preview">&#127961;</div>
+          <span class="hunt-badge" style="background: rgba(167,139,250,0.15); border-color: var(--accent-ghost); color: var(--accent-ghost);">Ghost Hunt</span>
+          <span class="hunt-stops-badge">8 stops</span>
+        </div>
+        <div class="hunt-card-body">
+          <div class="hunt-card-title">Capitol Hill Ghost Walk</div>
+          <div class="hunt-card-desc">Track down 8 Ghost Taags from businesses that closed during 2024. Urban archaeology at its finest.</div>
+          <div class="hunt-card-meta">
+            <span>~1.5 hr</span>
+            <span>2.8 mi</span>
+            <span>7 completions</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hunt-card">
+        <div class="hunt-card-img" style="background: linear-gradient(135deg, #101a10, #0a150a);">
+          <div class="route-preview">&#127795;</div>
+          <span class="hunt-badge">Active</span>
+          <span class="hunt-stops-badge">3 stops</span>
+        </div>
+        <div class="hunt-card-body">
+          <div class="hunt-card-title">Campus Quick Scan</div>
+          <div class="hunt-card-desc">A quick lunchtime adventure around UW campus. Three stops, three clues, one surprise ending.</div>
+          <div class="hunt-card-meta">
+            <span>~15 min</span>
+            <span>0.4 mi</span>
+            <span>56 completions</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="bottom-nav-item">
+          <div class="bottom-nav-icon">&#127968;</div>
+          <div class="bottom-nav-label">Home</div>
+        </div>
+        <div class="bottom-nav-item">
+          <div class="bottom-nav-icon">&#128506;</div>
+          <div class="bottom-nav-label">Map</div>
+        </div>
+        <div class="bottom-nav-item active">
+          <div class="scan-fab">&#11200;</div>
+          <div class="bottom-nav-label" style="color: var(--accent-claim); margin-top: 4px;">Scan</div>
+        </div>
+        <div class="bottom-nav-item active">
+          <div class="bottom-nav-icon">&#128218;</div>
+          <div class="bottom-nav-label" style="color: var(--accent-claim)">Hunts</div>
+        </div>
+        <div class="bottom-nav-item">
+          <div class="bottom-nav-icon">&#128100;</div>
+          <div class="bottom-nav-label">Profile</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Direction 6: Skate Zine -->
+<section class="direction-section d6" id="d6">
+  <div class="section-header">
+    <h2 style="color: var(--accent-rival)">6. Skate Zine</h2>
+    <p>Maximum attitude. Die-cut shapes, sticker bomb energy, bold deck-art graphics, offset rotations. This is TaagBack as a hand-assembled zine — raw, punk, covered in stickers. Every element looks stuck on by hand.</p>
+    <span class="tag" style="border-color: var(--accent-rival); color: var(--accent-rival)">Maximum Attitude</span>
+    <span class="tag" style="border-color: var(--accent-pioneer); color: var(--accent-pioneer)">Deck Art</span>
+    <span class="tag" style="border-color: var(--accent-claim); color: var(--accent-claim)">Die-Cut Everything</span>
+  </div>
+
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span></span>
+        <span>100%</span>
+      </div>
+
+      <div class="zine-header">
+        <div>
+          <div class="zine-logo">TAAG<br>BACK</div>
+        </div>
+        <div class="zine-issue">VOL.01 ISS.03</div>
+      </div>
+
+      <div class="sticker-wall">
+        <div class="die-cut cyan">42 Taags</div>
+        <div class="die-cut gold">Pioneer x12</div>
+        <div class="die-cut pink">5 Rivals</div>
+        <div class="die-cut green">3 Hunts Done</div>
+        <div class="die-cut purple">2 Ghosts</div>
+      </div>
+
+      <div class="deck-art">
+        <div class="deck-art-text">PIONEER</div>
+        <div class="deck-art-sub">Season 01 // March 2026</div>
+      </div>
+
+      <div class="zine-section">
+        <div class="zine-section-title">Recent Finds</div>
+
+        <div class="zine-taag-row">
+          <div class="zine-taag-stamp owned">&#9749;</div>
+          <div class="zine-taag-info">
+            <div class="zine-taag-name" style="color: var(--accent-claim)">Fourth Wave</div>
+            <div class="zine-taag-meta">Blue Bottle, 4th Ave &middot; Yours</div>
+          </div>
+          <div class="zine-taag-claim" style="color: var(--accent-claim); border: 1px solid var(--accent-claim); border-radius: 10px;">OWNED</div>
+        </div>
+
+        <div class="zine-taag-row">
+          <div class="zine-taag-stamp rival-stamp">&#127828;</div>
+          <div class="zine-taag-info">
+            <div class="zine-taag-name" style="color: var(--accent-rival)">Patty Palace</div>
+            <div class="zine-taag-meta">Dick's Drive-In &middot; @BurgerKing99</div>
+          </div>
+          <div class="zine-taag-claim" style="color: var(--accent-rival); border: 1px solid var(--accent-rival); border-radius: 10px;">RIVAL</div>
+        </div>
+
+        <div class="zine-taag-row">
+          <div class="zine-taag-stamp ghost-stamp">&#128123;</div>
+          <div class="zine-taag-info">
+            <div class="zine-taag-name" style="color: var(--accent-ghost)">Roxy's Last Show</div>
+            <div class="zine-taag-meta">Closed 2024 &middot; Ghost Taag</div>
+          </div>
+          <div class="zine-taag-claim" style="color: var(--accent-ghost); border: 1px dashed var(--accent-ghost); border-radius: 10px;">GHOST</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Compare All -->
+<section class="compare-section" id="compare">
+  <h2 style="color: var(--accent-pioneer)">Side-by-Side Comparison</h2>
+  <p style="text-align:center; color: var(--text-secondary); margin-bottom: 32px;">Each direction applies TaagBack's visual foundation differently. The recommended approach combines elements from multiple directions based on screen context and Volume Knob level.</p>
+
+  <div class="compare-grid">
+    <div class="compare-card">
+      <h3>1. Full Arcade</h3>
+      <p>Peak moments, celebrations, Volume 3</p>
+      <div class="phone" style="height:600px; border-radius:30px; border-color: rgba(255,209,102,0.2)">
+        <div class="phone-screen" style="background: var(--bg-primary); padding: 24px; text-align:center;">
+          <div style="font-family:'Space Mono',monospace; font-size:10px; letter-spacing:3px; color:var(--accent-pioneer); text-shadow:0 0 12px rgba(255,209,102,0.5); margin:32px 0 16px; text-transform:uppercase;">/// Pioneer ///</div>
+          <div style="font-family:'Space Mono',monospace; font-size:28px; font-weight:700; letter-spacing:3px; text-transform:uppercase; text-shadow:0 0 16px rgba(240,237,232,0.3);">UNCLAIMED</div>
+          <div style="height:24px"></div>
+          <div style="background:var(--bg-secondary); border:2px solid var(--accent-pioneer); padding:20px; border-radius:4px; box-shadow:0 0 16px rgba(255,209,102,0.1);">
+            <div style="font-family:'Space Mono',monospace; font-size:9px; color:var(--accent-pioneer); letter-spacing:2px; text-transform:uppercase;">Name This Taag</div>
+            <div style="font-family:'Space Mono',monospace; font-size:18px; margin-top:8px; border-bottom:2px solid var(--accent-pioneer); padding-bottom:4px; display:inline-block;">Fourth Wave<span style="display:inline-block;width:2px;height:20px;background:var(--accent-pioneer);vertical-align:middle;margin-left:2px;animation:blink 1s step-end infinite;"></span></div>
+          </div>
+          <div style="height:24px"></div>
+          <div style="background:var(--accent-pioneer); color:var(--bg-primary); padding:14px; font-family:'Space Mono',monospace; font-size:12px; letter-spacing:2px; text-transform:uppercase; border-radius:2px; box-shadow:0 0 16px rgba(255,209,102,0.25);">CLAIM</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-card">
+      <h3>2. Clean Explorer</h3>
+      <p>Utility screens, daily use, Volume 0-1</p>
+      <div class="phone" style="height:600px; border-radius:30px; border-color: rgba(255,255,255,0.08)">
+        <div class="phone-screen" style="background: var(--bg-primary); padding: 24px;">
+          <div style="text-align:center; margin: 24px 0;">
+            <div style="width:56px;height:56px;border-radius:50%;background:rgba(114,242,235,0.1);border:2px solid var(--accent-claim);display:inline-flex;align-items:center;justify-content:center;font-size:24px;">&#10003;</div>
+            <div style="font-size:20px;font-weight:700;margin-top:12px;">Already Claimed</div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">by @BrewHunter</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <div style="flex:1;background:var(--bg-secondary);border-radius:12px;padding:12px;text-align:center;">
+              <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--accent-claim);">47</div>
+              <div style="font-size:10px;color:var(--text-secondary);">Scans</div>
+            </div>
+            <div style="flex:1;background:var(--bg-secondary);border-radius:12px;padding:12px;text-align:center;">
+              <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--accent-claim);">12</div>
+              <div style="font-size:10px;color:var(--text-secondary);">Collectors</div>
+            </div>
+          </div>
+          <div style="background:var(--accent-rival);color:var(--bg-primary);padding:14px;border-radius:12px;text-align:center;font-weight:600;font-size:15px;">Watchlist This Taag</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-card">
+      <h3>3. Passport Forward</h3>
+      <p>Collection, browsing, personal identity</p>
+      <div class="phone" style="height:600px; border-radius:30px; border-color: rgba(255,209,102,0.15)">
+        <div class="phone-screen" style="background: var(--bg-warm); padding: 16px;">
+          <div style="text-align:center;font-family:'Space Mono',monospace;font-size:12px;letter-spacing:3px;color:var(--accent-pioneer);text-transform:uppercase;margin:16px 0;">My Passport</div>
+          <div style="background:linear-gradient(135deg,#1A1820,#1E1A20);border-radius:16px;padding:16px;border:1px solid rgba(255,209,102,0.08);display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+            <div style="aspect-ratio:1;border-radius:14px;background:rgba(114,242,235,0.08);border:2px solid var(--accent-claim);display:flex;align-items:center;justify-content:center;font-size:22px;">&#9749;</div>
+            <div style="aspect-ratio:1;border-radius:14px;background:rgba(114,242,235,0.08);border:2px solid var(--accent-claim);display:flex;align-items:center;justify-content:center;font-size:22px;transform:rotate(-2deg);">&#127828;</div>
+            <div style="aspect-ratio:1;border-radius:14px;background:rgba(255,107,157,0.05);border:1px solid rgba(255,107,157,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;opacity:0.7;">&#128218;</div>
+            <div style="aspect-ratio:1;border-radius:14px;background:rgba(167,139,250,0.08);border:2px dashed var(--accent-ghost);display:flex;align-items:center;justify-content:center;font-size:22px;transform:rotate(1deg);">&#128123;</div>
+            <div style="aspect-ratio:1;border-radius:14px;background:rgba(114,242,235,0.08);border:2px solid var(--accent-claim);display:flex;align-items:center;justify-content:center;font-size:22px;transform:rotate(2deg);">&#127915;</div>
+            <div style="aspect-ratio:1;border-radius:14px;border:1px dashed rgba(255,255,255,0.08);opacity:0.3;"></div>
+          </div>
+          <div style="text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--text-disabled);letter-spacing:4px;margin-top:16px;">. . 3 . .</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-card">
+      <h3>4. Terminal Hacker</h3>
+      <p>Leaderboards, competition, data views</p>
+      <div class="phone" style="height:600px; border-radius:30px; border-color: rgba(74,222,128,0.2)">
+        <div class="phone-screen" style="background: #080C08; padding: 8px; font-family:'Space Mono',monospace;">
+          <div style="font-size:10px;letter-spacing:3px;color:var(--accent-hunt);text-transform:uppercase;padding:12px 8px;border-bottom:1px solid rgba(74,222,128,0.1);">Top Sourcers</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(74,222,128,0.08);margin:8px 0;border:1px solid rgba(74,222,128,0.15);">
+            <div style="background:#080C08;padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--accent-hunt);text-shadow:0 0 8px rgba(74,222,128,0.3);">847</div><div style="font-size:8px;color:var(--text-disabled);text-transform:uppercase;letter-spacing:1px;">Players</div></div>
+            <div style="background:#080C08;padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--accent-hunt);text-shadow:0 0 8px rgba(74,222,128,0.3);">12.4K</div><div style="font-size:8px;color:var(--text-disabled);text-transform:uppercase;letter-spacing:1px;">Taags</div></div>
+            <div style="background:#080C08;padding:10px;text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--accent-hunt);text-shadow:0 0 8px rgba(74,222,128,0.3);">156</div><div style="font-size:8px;color:var(--text-disabled);text-transform:uppercase;letter-spacing:1px;">Hunts</div></div>
+          </div>
+          <div style="font-size:12px;padding:8px;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="color:var(--accent-pioneer);text-shadow:0 0 6px rgba(255,209,102,0.4);">01</span> <span style="margin-left:8px;">@QRQueen</span> <span style="float:right;color:var(--accent-hunt);">342</span></div>
+          <div style="font-size:12px;padding:8px;border-bottom:1px solid rgba(255,255,255,0.04);"><span style="color:var(--accent-pioneer);text-shadow:0 0 6px rgba(255,209,102,0.4);">02</span> <span style="margin-left:8px;">@NightScanner</span> <span style="float:right;color:var(--accent-hunt);">298</span></div>
+          <div style="font-size:12px;padding:8px;border-bottom:1px solid rgba(255,255,255,0.04);background:rgba(114,242,235,0.05);border-left:2px solid var(--accent-claim);"><span style="color:var(--text-disabled);">05</span> <span style="margin-left:8px;color:var(--accent-claim);">@You</span> <span style="float:right;color:var(--accent-claim);">234</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-card">
+      <h3>5. Balanced Blend</h3>
+      <p>Daily use, hunt discovery, navigation</p>
+      <div class="phone" style="height:600px; border-radius:30px; border-color: rgba(114,242,235,0.12)">
+        <div class="phone-screen" style="background: var(--bg-primary); padding: 16px;">
+          <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;margin:16px 0 12px;">Nearby Hunts</div>
+          <div style="background:var(--bg-secondary);border-radius:4px;overflow:hidden;margin-bottom:12px;border:1px solid rgba(255,255,255,0.04);">
+            <div style="height:80px;background:linear-gradient(135deg,var(--bg-tertiary),var(--bg-map));display:flex;align-items:center;justify-content:center;font-size:32px;opacity:0.3;position:relative;">&#128506;<span style="position:absolute;top:8px;left:8px;font-family:'Space Mono',monospace;font-size:9px;padding:3px 6px;background:rgba(74,222,128,0.15);border:1px solid var(--accent-hunt);color:var(--accent-hunt);border-radius:2px;text-transform:uppercase;letter-spacing:1px;opacity:1;">Active</span></div>
+            <div style="padding:12px;"><div style="font-size:15px;font-weight:600;">Pike Place Trail</div><div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">5 stops &middot; ~45 min &middot; 1.2 mi</div></div>
+          </div>
+          <div style="background:var(--bg-secondary);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,0.04);">
+            <div style="height:80px;background:linear-gradient(135deg,#1a1020,#0a1520);display:flex;align-items:center;justify-content:center;font-size:32px;opacity:0.3;position:relative;">&#127961;<span style="position:absolute;top:8px;left:8px;font-family:'Space Mono',monospace;font-size:9px;padding:3px 6px;background:rgba(167,139,250,0.15);border:1px solid var(--accent-ghost);color:var(--accent-ghost);border-radius:2px;text-transform:uppercase;letter-spacing:1px;opacity:1;">Ghost</span></div>
+            <div style="padding:12px;"><div style="font-size:15px;font-weight:600;">Ghost Walk</div><div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">8 stops &middot; ~1.5 hr &middot; 2.8 mi</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-card">
+      <h3>6. Skate Zine</h3>
+      <p>Profile, badges, maximum personality</p>
+      <div class="phone" style="height:600px; border-radius:30px; border-color: rgba(255,107,157,0.2)">
+        <div class="phone-screen" style="background: var(--bg-primary); padding: 16px;">
+          <div style="font-family:'Space Mono',monospace;font-size:24px;font-weight:700;letter-spacing:3px;text-transform:uppercase;text-shadow:3px 3px 0 var(--accent-rival),0 0 16px rgba(255,107,157,0.3);margin:16px 0;">TAAG<br>BACK</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
+            <span style="padding:6px 12px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent-claim);border:2px solid var(--accent-claim);border-radius:14px;transform:rotate(-2deg);display:inline-block;">42 Taags</span>
+            <span style="padding:6px 12px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--bg-primary);background:var(--accent-pioneer);border-radius:4px 14px 4px 14px;transform:rotate(1deg);display:inline-block;">Pioneer x12</span>
+            <span style="padding:6px 12px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent-rival);border:2px solid var(--accent-rival);border-radius:50px;display:inline-block;">5 Rivals</span>
+          </div>
+          <div style="height:100px;background:linear-gradient(135deg,#1a0a1e,#0a1a1e);border:2px solid var(--accent-rival);display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+            <span style="font-family:'Space Mono',monospace;font-size:24px;font-weight:700;letter-spacing:4px;text-transform:uppercase;text-shadow:3px 3px 0 var(--accent-rival),-1px -1px 0 var(--accent-claim);">PIONEER</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Palette Reference -->
+<section class="palette-section" id="palette">
+  <h2 style="color: var(--accent-pioneer)">Color & Type Reference</h2>
+
+  <div class="palette-group">
+    <h3>Core Palette</h3>
+    <div class="palette-row">
+      <div class="palette-swatch" style="background: #0A0A0F;">
+        <span class="swatch-name" style="color: var(--text-secondary)">bg-primary</span>
+        <span class="swatch-hex" style="color: var(--text-disabled)">#0A0A0F</span>
+      </div>
+      <div class="palette-swatch" style="background: #161622;">
+        <span class="swatch-name" style="color: var(--text-secondary)">bg-secondary</span>
+        <span class="swatch-hex" style="color: var(--text-disabled)">#161622</span>
+      </div>
+      <div class="palette-swatch" style="background: #1E1E2E;">
+        <span class="swatch-name" style="color: var(--text-secondary)">bg-tertiary</span>
+        <span class="swatch-hex" style="color: var(--text-disabled)">#1E1E2E</span>
+      </div>
+      <div class="palette-swatch" style="background: #1A1820;">
+        <span class="swatch-name" style="color: var(--text-secondary)">bg-warm</span>
+        <span class="swatch-hex" style="color: var(--text-disabled)">#1A1820</span>
+      </div>
+      <div class="palette-swatch" style="background: #12121C;">
+        <span class="swatch-name" style="color: var(--text-secondary)">bg-map</span>
+        <span class="swatch-hex" style="color: var(--text-disabled)">#12121C</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="palette-group">
+    <h3>Text</h3>
+    <div class="palette-row">
+      <div class="palette-swatch" style="background: var(--bg-secondary); border-left: 4px solid #F0EDE8;">
+        <span class="swatch-name" style="color: #F0EDE8">text-primary</span>
+        <span class="swatch-hex" style="color: var(--text-disabled)">#F0EDE8</span>
+      </div>
+      <div class="palette-swatch" style="background: var(--bg-secondary); border-left: 4px solid #9893A3;">
+        <span class="swatch-name" style="color: #9893A3">text-secondary</span>
+        <span class="swatch-hex" style="color: var(--text-disabled)">#9893A3</span>
+      </div>
+      <div class="palette-swatch" style="background: var(--bg-secondary); border-left: 4px solid #4A4458;">
+        <span class="swatch-name" style="color: #4A4458">text-disabled</span>
+        <span class="swatch-hex" style="color: var(--text-disabled)">#4A4458</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="palette-group">
+    <h3>Neon Rack</h3>
+    <div class="palette-row">
+      <div class="palette-swatch" style="background: var(--bg-secondary); border-left: 4px solid var(--accent-pioneer); box-shadow: inset 0 0 20px rgba(255,209,102,0.1);">
+        <span class="swatch-name" style="color: var(--accent-pioneer)">Pioneer Gold</span>
+        <span class="swatch-hex" style="color: var(--text-disabled)">#FFD166</span>
+      </div>
+      <div class="palette-swatch" style="background: var(--bg-secondary); border-left: 4px solid var(--accent-claim); box-shadow: inset 0 0 20px rgba(114,242,235,0.1);">
+        <span class="swatch-name" style="color: var(--accent-claim)">Claim Cyan</span>
+        <span class="swatch-hex" style="color: var(--text-disabled)">#72F2EB</span>
+      </div>
+      <div class="palette-swatch" style="background: var(--bg-secondary); border-left: 4px solid var(--accent-rival); box-shadow: inset 0 0 20px rgba(255,107,157,0.1);">
+        <span class="swatch-name" style="color: var(--accent-rival)">Rival Magenta</span>
+        <span class="swatch-hex" style="color: var(--text-disabled)">#FF6B9D</span>
+      </div>
+      <div class="palette-swatch" style="background: var(--bg-secondary); border-left: 4px solid var(--accent-hunt); box-shadow: inset 0 0 20px rgba(74,222,128,0.1);">
+        <span class="swatch-name" style="color: var(--accent-hunt)">Hunt Green</span>
+        <span class="swatch-hex" style="color: var(--text-disabled)">#4ADE80</span>
+      </div>
+      <div class="palette-swatch" style="background: var(--bg-secondary); border-left: 4px solid var(--accent-alert); box-shadow: inset 0 0 20px rgba(251,146,60,0.1);">
+        <span class="swatch-name" style="color: var(--accent-alert)">Alert Amber</span>
+        <span class="swatch-hex" style="color: var(--text-disabled)">#FB923C</span>
+      </div>
+      <div class="palette-swatch" style="background: var(--bg-secondary); border-left: 4px solid var(--accent-ghost); box-shadow: inset 0 0 20px rgba(167,139,250,0.1);">
+        <span class="swatch-name" style="color: var(--accent-ghost)">Ghost Purple</span>
+        <span class="swatch-hex" style="color: var(--text-disabled)">#A78BFA</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="palette-group">
+    <h3>Corner Families</h3>
+    <div class="palette-row" style="gap: 24px;">
+      <div style="flex:1">
+        <div style="background:var(--bg-secondary); border:1px solid var(--accent-hunt); border-radius:2px; padding:24px; text-align:center; margin-bottom:8px;">
+          <div style="font-family:'Space Mono',monospace; font-size:14px; color:var(--accent-hunt);">Terminal Corner</div>
+          <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">0-4px radius</div>
+        </div>
+        <div style="font-size:12px; color:var(--text-disabled); text-align:center;">Game world, data, competition</div>
+      </div>
+      <div style="flex:1">
+        <div style="background:var(--bg-warm); border:1px solid var(--accent-pioneer); border-radius:14px; padding:24px; text-align:center; margin-bottom:8px;">
+          <div style="font-family:'Space Mono',monospace; font-size:14px; color:var(--accent-pioneer);">Sticker Corner</div>
+          <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">12-16px radius</div>
+        </div>
+        <div style="font-size:12px; color:var(--text-disabled); text-align:center;">Collection, personal, passport</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="type-showcase">
+    <h3 style="font-family:'Space Mono',monospace; font-size:14px; color:var(--text-secondary); margin-bottom:16px; letter-spacing:2px; text-transform:uppercase;">Typography Scale</h3>
+
+    <div class="type-sample">
+      <div class="type-meta">Display 32px<br>Space Mono Bold</div>
+      <div style="font-family:'Space Mono',monospace; font-size:32px; font-weight:700; letter-spacing:3px; text-transform:uppercase; text-shadow:0 0 12px rgba(255,209,102,0.4); color:var(--accent-pioneer);">PIONEER!</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">H1 24px<br>Space Mono Bold</div>
+      <div style="font-family:'Space Mono',monospace; font-size:24px; font-weight:700;">Nearby Hunts</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">H2 20px<br>Space Mono Semi</div>
+      <div style="font-family:'Space Mono',monospace; font-size:20px; font-weight:600;">Fourth Wave</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">H3 16px<br>Inter Semibold</div>
+      <div style="font-family:'Inter',sans-serif; font-size:16px; font-weight:600;">Pike Place Pioneer Trail</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">Body 16px<br>Inter Regular</div>
+      <div style="font-family:'Inter',sans-serif; font-size:16px; line-height:1.5; color:var(--text-primary);">Discover the hidden history of Seattle's most famous market through 5 QR codes you've walked past a hundred times.</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">Caption 13px<br>Inter Regular</div>
+      <div style="font-family:'Inter',sans-serif; font-size:13px; color:var(--text-secondary);">Claimed by @BrewHunter &middot; 47 scans &middot; 2 days ago</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">Micro 12px<br>Inter Medium</div>
+      <div style="font-family:'Inter',sans-serif; font-size:12px; font-weight:500; color:var(--text-disabled); text-transform:uppercase; letter-spacing:1px;">Ghost Taag &middot; Restaurant &middot; Pioneer Badge</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">Stat 20px<br>Space Mono Bold</div>
+      <div style="font-family:'Space Mono',monospace; font-size:20px; font-weight:700; color:var(--accent-claim); text-shadow:0 0 8px rgba(114,242,235,0.3);">234 <span style="font-size:12px; color:var(--text-disabled); font-weight:400;">TAAGS</span></div>
+    </div>
+  </div>
+</section>
+
+<script>
+function showSection(id) {
+  document.querySelectorAll('.direction-section, .compare-section, .palette-section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  window.scrollTo(0, 0);
+}
+</script>
+
+</body>
+</html>
