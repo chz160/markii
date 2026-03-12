@@ -4,79 +4,51 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-TaagBack is a QR-code-powered scavenger hunt platform. Hunt creators build experiences with clue stops behind printable QR codes; players scan them with the mobile app to progress through hunts.
-
-## Build & Run Commands
-
-### Backend (.NET 10 API)
-
-```bash
-# Run the API server
-dotnet run --project server/TaagBack.Api
-# → http://localhost:5000
-# → OpenAPI spec: http://localhost:5000/openapi/v1.json (dev only)
-
-# Run all tests
-dotnet test server/TaagBack.slnx
-
-# Run a single test by name
-dotnet test server/TaagBack.Tests --filter "FullyQualifiedName~HuntServiceTests.Create_ShouldAddHuntAndReturnIt"
-
-# Build without running
-dotnet build server/TaagBack.slnx
-```
-
-### Frontend (React Native / Expo)
-
-```bash
-# Install dependencies (from ui/TaagBack/)
-cd ui/TaagBack && npm install
-
-# Start dev server
-npm start --prefix ui/TaagBack
-
-# Platform-specific
-npm run web --prefix ui/TaagBack
-npm run android --prefix ui/TaagBack
-npm run ios --prefix ui/TaagBack
-```
+TaagBack is a mobile scavenger hunt platform powered by QR codes. Hunt creators build experiences with clues hidden behind printable QR codes; players scan them to progress through the hunt.
 
 ## Architecture
 
-**Client/server architecture**: React Native (Expo) mobile app communicates over HTTP with a .NET 10 ASP.NET Core Web API.
+- **TaagBack.Api/** — ASP.NET Core 10 Web API (C# 13, nullable enabled)
+- **TaagBack.Tests/** — NUnit 4 unit tests for the API
+- **TaagBack/** — React Native (Expo SDK 55) mobile app in TypeScript
+- **TaagBack.slnx** — .NET solution file at repo root
 
-### Backend (`server/`)
+Backend uses controller → service → in-memory store pattern. Services are registered via DI in `Program.cs`. Data is currently stored in `List<T>` (no database yet). CORS allows all origins.
 
-Three-layer architecture with dependency injection:
+Frontend uses screen-based navigation managed via state in `App.tsx`, with a typed fetch API client in `src/services/api.ts`.
 
-- **Controllers** (`Controllers/`) — HTTP request/response mapping. Three controllers: `HuntsController` (`/api/hunts`), `HuntStopsController` (`/api/hunts/{huntId}/stops`), `ScanController` (`/api/scan/{token}`)
-- **Services** (`Services/`) — Business logic behind interfaces (`IHuntService`/`HuntService`, `IHuntStopService`/`HuntStopService`). Registered as singletons in `Program.cs`. Currently use in-memory `List<T>` storage, designed to be swapped for DB-backed implementations.
-- **Models** (`Models/`) — Domain entities: `Hunt` and `HuntStop`
+## Commands
 
-Testing uses **NUnit 4** in `TaagBack.Tests/`.
+### Backend
 
-### Frontend (`ui/TaagBack/`)
+```bash
+# Run API server (http://localhost:5218, https://localhost:7014)
+dotnet run --project TaagBack.Api
 
-- **Expo SDK 55**, React Native 0.83, TypeScript (strict mode)
-- Screen components in `src/screens/` — `HuntListScreen`, `HuntDetailScreen`, `QrScanScreen`
-- Typed API client in `src/services/api.ts` — base URL from `EXPO_PUBLIC_API_URL` env var (defaults to `http://localhost:5000`)
-- Navigation is currently manual state management in `App.tsx` (React Navigation planned)
-- No global state management yet (local component state only)
+# Run all tests
+dotnet test TaagBack.Tests
 
-## BMAD Method Integration
+# Run a single test by name
+dotnet test TaagBack.Tests --filter "FullyQualifiedName~TestMethodName"
+```
 
-This project uses the BMAD framework (v6.0.4) for structured development workflows. BMAD agents, workflows, and configuration live in `_bmad/`. Output artifacts go to `_bmad-output/`. Available as slash commands (type `/bmad-` to see options).
+### Frontend
 
-Key BMAD paths:
-- Agent definitions: `_bmad/bmm/agents/`
-- Workflows: `_bmad/bmm/workflows/` (organized by phase)
-- Module config: `_bmad/bmm/config.yaml` (load before any agent activation)
-- Planning artifacts: `_bmad-output/planning-artifacts/`
-- Implementation artifacts: `_bmad-output/implementation-artifacts/`
+```bash
+cd TaagBack
+npm install
+npm start        # Expo dev server
+npm run web      # Browser preview
+npm run android  # Android emulator/device
+npm run ios      # iOS simulator (macOS)
+```
 
-## Key Conventions
+## API Endpoints
 
-- Services are registered as **singletons** via DI in `Program.cs` — use interface-based abstractions
-- CORS is currently open (any origin/header/method) for development
-- The solution file is `server/TaagBack.slnx` (XML-based solution format)
-- API documentation lives in `docs/api.md`; architecture decisions in `docs/architecture.md`
+- `GET/POST /api/hunts`, `GET/PUT/DELETE /api/hunts/{id}`
+- `GET/POST /api/hunts/{huntId}/stops`, `GET/PUT/DELETE /api/hunts/{huntId}/stops/{id}`
+- `GET /api/scan/{token}` — resolve QR code token to hunt stop
+
+## BMAD Method
+
+This project uses the BMAD method for AI-assisted development. Agent definitions and workflows live under `_bmad/`. Configuration is in `.github/copilot-instructions.md`. Use `/bmad-` prefixed slash commands to access BMAD workflows.
