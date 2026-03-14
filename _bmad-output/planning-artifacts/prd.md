@@ -282,8 +282,8 @@ Niantic's Wayfarer requires nomination, community review, and approval (days to 
 
 ### Offline Mode
 
-- Cache active hunt data (stops, clues) locally when user opens a hunt. Playable without connectivity after initial load.
-- Queue scan claims offline with timestamps. Sync when connectivity returns. Idempotency tokens prevent double-claims on retry.
+- Queue scan claims offline with timestamps. Sync when connectivity returns. Idempotency tokens prevent double-claims on retry. Queued scans drain at 1 per 2 seconds when connectivity resumes to stay within rate limits.
+- Hunt clue data is pre-cached on-device when a player joins a hunt for fast display, but hunt progression requires connectivity (server-side validation). Queued offline scans that match hunt stops advance progression when they sync.
 - Leaderboards and collection data use stale-while-revalidate pattern. Acceptable staleness: 5 minutes.
 
 ### App Store Compliance
@@ -499,7 +499,7 @@ Niantic's Wayfarer requires nomination, community review, and approval (days to 
 ### Reliability
 
 - NFR20: API maintains 99.5% uptime measured monthly.
-- NFR21: Offline-queued scan claims sync correctly when connectivity returns with zero data loss.
+- NFR21: Offline-queued scan claims sync correctly when connectivity returns with zero data loss. Hunt progression requires connectivity; queued scans advance hunts upon sync.
 - NFR22: Idempotency keys prevent duplicate scan records on network retry.
 
 ### Audio

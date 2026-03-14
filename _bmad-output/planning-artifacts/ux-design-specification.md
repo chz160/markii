@@ -79,7 +79,7 @@ The app operates in **three distinct user modes**, each with different emotional
 - **Mobile-only for MVP** — iOS 16+ and Android 8.0+ via React Native (Expo SDK 55). No web support; PWA planned post-MVP as a lower-friction discovery funnel.
 - **Camera-first with bottom navigation** — The scanner is the default landing and visually prominent tab. Four tabs map to four core user intents: **Scan** (discover and source), **Collection** (review what's mine), **Leaderboard** (compete and compare), **Profile** (stats, settings, hunt management). Bottom nav gives returning users with non-scanning intent immediate access without smart-landing complexity.
 - **Touch-first, one-handed operation** — Users are walking, scanning in varied lighting and weather. The UI requires high contrast, large touch targets, and graceful degradation for outdoor use.
-- **Offline-capable** — Hunt data cached locally on open. Scan claims queued offline with idempotency tokens and synced on reconnect. Leaderboards and collection data use stale-while-revalidate (5-minute acceptable staleness).
+- **Offline-resilient** — Scan claims queued offline with idempotency tokens and synced on reconnect (drain rate: 1 per 2 seconds). Hunt clue data pre-cached on-device when player joins for fast display, but hunt progression requires connectivity — queued offline scans advance hunts upon sync. Leaderboards and collection data use stale-while-revalidate (5-minute acceptable staleness).
 - **Device capabilities leveraged** — Camera (QR scanning via VisionKit/MLKit, raw data interception before URL resolution), GPS (Taag placement + geofence verification at 50m default radius), Push notifications (watchlist alerts, claim expiry, hunt invitations), Secure storage (auth tokens in iOS Keychain / Android Keystore).
 - **Physical-world context** — The primary usage environment is outdoors and in motion. Direct sunlight readability, variable connectivity, and quick-glance information hierarchy are non-negotiable constraints.
 
@@ -732,7 +732,7 @@ TaagBack's defining experience is a three-beat sequence: (1) Scan any real-world
 | **Already claimed** (not in a hunt) | Charged rivalry reveal | Dramatic name reveal with flair — not a label, a REVEAL. Show claimer's stats/streak for aspiration or rivalry. "You're the 47th person to find this Taag." Watchlist prompt framed as power move: "Want to know when this one's up for grabs?" |
 | **Re-scan** (your claimed Taag) | Satisfaction + maintenance | Warm recognition: "Welcome back to [name]! Claim maintained." Subtle pulse confirmation. Streak counter. If someone else scanned since your last visit, mention it — "3 others visited while you were away." |
 | **Repeat scan** (not yours, seen before) | Updated intelligence | Fresh context: "[Owner] hasn't been here in 3 weeks..." or "Still holding strong — [owner] visited yesterday." Drip-feed competitive intelligence. Never dismiss as "already scanned." |
-| **Hunt stop** (part of active hunt) | Adventure + progression | Clue reveal animation. Progress bar advancement. "2 of 5 stops found!" |
+| **Hunt stop** (part of active hunt) | Adventure + progression | Clue reveal animation. Visual tone shifts with `progressPhase` (early→middle→late→final) — no numeric counter. The mystery of "how many are left?" builds tension throughout the hunt. |
 | **Hunt stop + Pioneer** | Double payoff | Pioneer celebration + naming ceremony FIRST, then hunt progression. Two rewards stacked. |
 
 **4. Completion:**
@@ -1427,7 +1427,7 @@ flowchart TD
     T -->|Edit more| M
     T -->|Publish| U[Hunt goes LIVE<br/>Deep link generated<br/>Celebration: "Your hunt is live!"]
     U --> V[Share options<br/>Copy link, text, social]
-    V --> W[Creator dashboard<br/>Starts showing stats as players engage]
+    V --> W[Hunt detail screen<br/>Shows player count + completion count as players engage]
 ```
 
 **Key flow decisions:**
@@ -1437,7 +1437,7 @@ flowchart TD
 - Sequence is reorderable via drag with live route preview on map
 - Preview mode lets creators experience their own hunt before publishing
 - Deep link generation is automatic at publish — no separate step
-- Creator dashboard surfaces immediately after publish (even with 0 completions, show "waiting for players")
+- Hunt detail screen shows creator stats immediately after publish (even with 0 completions, show "waiting for players"). MVP shows two numbers: playerCount and completionCount. Per-stop analytics (attempt counts, drop-off funnel) deferred to Fast Follow.
 
 ### 10.4 The Contested Taag (Dave to Mia)
 
@@ -1753,7 +1753,8 @@ These are documented patterns built from foundation components, not custom libra
 | **Passport Issuance (Account Creation)** | Full-screen Experience + TextInput + Button + social login buttons | First app launch |
 | **Clue Editor** | TextInput (title 30 char + body 280 char) + hint toggle + ClueCard preview | Hunt builder screen |
 | **Maintenance Indicator** | Animated Badge (breathing Alert Amber) overlaid on TaagCardBase | Collection view, notifications |
-| **Creator Dashboard Funnel** | ProgressBar segments + ListItems with per-stop attempt counts | Hunt management screen |
+| **Creator Stats (MVP)** | Two stat numbers (playerCount, completionCount) on HuntDetail screen for creator | Hunt detail screen |
+| **Creator Dashboard Funnel (Fast Follow)** | ProgressBar segments + ListItems with per-stop attempt counts | Hunt management screen |
 | **Map Accessible List** | Sorted ListItem overlay at bottom of MapView when screen reader active | Map screen |
 
 ### 11.6 Component Implementation Roadmap
@@ -1814,7 +1815,7 @@ These are documented patterns built from foundation components, not custom libra
 - Sunlight adaptation on all components
 - Hunt route rendering on MapView
 - Map filter controls, couch-mode selection
-- Per-stop creator dashboard funnel
+- Per-stop creator dashboard funnel (Fast Follow — MVP has playerCount + completionCount only)
 - Celebration variety expansion
 - Audio ring-out across screen transitions (exploratory)
 - Dynamic type scaling testing at 1.5x
@@ -1881,7 +1882,7 @@ Note: Progressive messages describe app state, not user ability. No "hold steady
 
 **Photo Finish (Accidental Near-Simultaneous Pioneer — Phase 2):** Winner gets full Pioneer celebration. Runner-up (within ~30 seconds): "Photo Finish" special UX is Phase 2. MVP: runner-up sees standard already-claimed result. Phase 2: "You JUST missed being the pioneer — [winner] beat you by seconds!" A story, not an error.
 
-**"Claimed!" (Intentional Re-claim Race):** Different framing from Photo Finish — both users KNEW they were racing (watchlist alert). Winner: "You beat [n] others to claim this Taag!" Runner-up (within ~60 seconds): "Just missed it! [Winner] claimed it [n] seconds before you." Immediate watchlist prompt. Competitive framing, not accidental.
+**"Claimed!" (Intentional Re-claim Race — Post-MVP):** The competitive race narrative below requires server-side data (competing claimant count, time delta) not available at MVP. MVP: winner sees `unclaimedDiscovery` celebration; runner-up sees `collection` with `previouslyScannedByUser: false` — "Someone just claimed this Taag!" with immediate watchlist prompt. Post-MVP: "You beat [n] others to claim this Taag!" for winner, "Just missed it! [Winner] claimed it [n] seconds before you" for runner-up. Competitive framing, not accidental.
 
 **Rapid Scan Detection:** If user scans within 10 seconds of dismissing a celebration, compress the next celebration: skip airlock, show condensed Tier 1 celebration (~3 seconds), streak counter: "3 Pioneers in a row!" First Pioneer of a session gets full ceremony. Subsequent rapid-fire Pioneers get "speed mode." Naming ceremony always gets full pacing (requires user input).
 
@@ -1930,7 +1931,7 @@ Note: Progressive messages describe app state, not user ability. No "hold steady
 **Camera-First Home:**
 - App opens to camera. Always. No splash screen, no home feed, no dashboard.
 - **Exception:** Deep link entry opens to linked content (hunt invitation, Taag detail). After deep link flow completes, user lands in normal camera-first state.
-- Bottom tab bar: Scan (camera), Collection, Hunts, Map, Profile.
+- Bottom tab bar: Scan (camera), Collection, Leaderboard, Profile. Four tabs matching four core user intents. Hunts and Map tabs are Fast Follow additions when hunt discovery and spatial browse endpoints are available.
 
 **Tab Bar Behavior:**
 
@@ -2016,7 +2017,7 @@ Simple yes/no at high engagement moments. Never more than two options at an emot
 - All cached data browsable (collection, completed hunts, claimed Taags).
 - Scan still works: camera detects, queues scan, shows "Scan saved!"
 - Queue badge on Scan tab showing queued count.
-- **Hunts playable offline once joined.** Join requires internet (downloads hunt data with stop validation hashes). Gameplay after join validates client-side against downloaded hashes. Completions queued for server sync.
+- **Hunts require connectivity for progression.** Hunt clue data is pre-cached on-device when a player joins (so current clue text is readable offline), but advancing to the next stop requires server-side validation. Offline scans are queued and advance hunt progression when they sync. Show "Waiting for connection to verify..." after an offline scan during a hunt.
 
 ### 12.6 Modal & Overlay Patterns
 
@@ -2070,7 +2071,7 @@ Simple yes/no at high engagement moments. Never more than two options at an emot
 - Auto-save: drafts persist if creator leaves mid-creation.
 
 **Hunt Metadata (Creator Form):**
-- Title (50 chars), description (200 chars), category (optional preset list).
+- Title (50 chars), description (200 chars). Hunt category field deferred to Fast Follow (added when hunt discovery/browse is implemented).
 - Title required, minimum 2 stops to publish.
 
 **Form Validation Style:**
@@ -2097,13 +2098,14 @@ Simple yes/no at high engagement moments. Never more than two options at an emot
 - Search bar at top. Clean grid, Terminal corners. Sort: newest, oldest, alphabetical, most scanned, nearest.
 - Results update as-you-type with 300ms debounce.
 
-**Hunt Discovery Filters:**
+**Hunt Discovery Filters — Fast Follow:**
+MVP hunt discovery is organic (scanning a Taag that's part of a hunt) and via deep links (shared hunt URLs). The browse/filter experience below is deferred to Fast Follow, when the spatial hunt discovery endpoint (`GET /api/v1/hunts?lat=&lng=&radiusMeters=`) and Hunts tab are available.
 - Distance (nearby/city/any), length (quick 2-3/medium 4-6/epic 7+), status (unstarted/in-progress/completed).
 - Filter BottomSheet with chip selection + Apply button.
 
 **Leaderboard Filters:**
-- Scope tabs: neighborhood/city/global.
-- Category/time dropdowns: total scans, unique Taags, hunts completed, streak length × all-time, this month, this week.
+- **MVP:** Three category tabs (sourcers, scanners, hunters) × three time periods (this week, this month, all-time). Time period selector as segmented control or dropdown. Six leaderboard views total.
+- **Fast Follow:** Geographic scope tabs (neighborhood/city/global) and additional categories (streak length, unique Taags). Requires geographic leaderboard endpoint support.
 
 ### 12.9 List & Data Display Patterns
 
@@ -2114,7 +2116,8 @@ Simple yes/no at high engagement moments. Never more than two options at an emot
 - Top 3: #1 Pioneer Gold accent, #2-3 subtle elevation.
 - Tap row → player profile.
 
-**Hunt List Items (Experience World):**
+**Hunt List Items (Experience World) — Fast Follow:**
+Used in the Hunts tab (Fast Follow) and hunt completion nearby-hints. At MVP, hunt list items appear only in `nearbyHuntHints` on the hunt completion screen (max 2 items) and in `players/me/hunts` (my active/completed hunts).
 - Sticker corners, bg-warm undertone.
 - Title in Space Mono text-h3. Creator, stop count, distance in Inter text-caption.
 - Status badge: "New" (Hunt Green), "In Progress" (Alert Amber), "Completed" (Hunt Green + checkmark).
@@ -2125,7 +2128,8 @@ Simple yes/no at high engagement moments. Never more than two options at an emot
 - Status: "Secure" (Claim Cyan, >14 days), "Weakening" (Alert Amber, 7-14 days), "Expiring" (Alert Amber pulse, <7 days), "Contestable!" (Rival Magenta).
 - Tap → Taag detail. Long-press → remove from watchlist.
 
-**Notification Feed (Utility Mode):**
+**Notification Feed (Utility Mode) — Fast Follow:**
+MVP uses push notifications only (fire-and-forget via OS notification tray). The in-app notification feed below is deferred to Fast Follow, when a server-side Notification entity and feed endpoint are available.
 - Terminal corners, minimal styling, grouped by day.
 - Types: claim expiring, watchlist alert, hunt invitation, milestone, photo finish.
 - Unread: accent-colored left border. Read: no border.
@@ -2284,7 +2288,7 @@ Post-MVP consideration: landscape for map view in couch-mode hunt building (Phas
 
 | Requirement | Implementation |
 |-------------|---------------|
-| Consistent navigation | Same 5 tabs, same position, throughout app |
+| Consistent navigation | Same 4 tabs, same position, throughout app |
 | Predictable behavior | Same gesture = same flow. No surprise modals. |
 | Error prevention | Naming confirmation beat. "Abandon hunt?" confirmation. |
 | Simple language | Conversational UI copy. "Scan saved!" not "Queued for synchronization." |
@@ -2357,3 +2361,21 @@ Post-MVP consideration: landscape for map view in couch-mode hunt building (Phas
 6. **Test on the Pixel 6a.** If PassportPage scrolls smoothly there, it works everywhere.
 
 7. **Font scaling test.** Set system font to 1.5x. Fix anything that clips, overflows, or becomes unreadable. Use `numberOfLines` + `ellipsizeMode` where text must be bounded.
+
+---
+
+## UX ↔ Architecture Alignment (2026-03-14)
+
+The following changes were applied to this UX spec based on a cross-functional alignment review between Architect, UX Designer, and Product Manager. See `_bmad-output/planning-artifacts/ux-architecture-alignment-review-2026-03-14.md` for the full review document.
+
+**Changes applied to this UX document:**
+1. **Tab navigation** — Section 12.3 updated to 4 tabs (Scan, Collection, Leaderboard, Profile) matching Section 2. Hunts and Map tabs deferred to Fast Follow.
+2. **Offline hunt play** — Removed "playable offline" claims. Hunts require connectivity for progression. Offline scans queue and advance hunts upon sync. Clue text is pre-cached for display.
+3. **Notification feed** — Marked as Fast Follow. MVP uses push notifications only (OS notification tray).
+4. **Hunt discovery/browse** — Marked as Fast Follow. MVP discovery is organic (scan-based) and via deep links. Hunt filters deferred.
+5. **Leaderboard filters** — Simplified to 3 types × 3 time periods at MVP. Geographic scope deferred to Fast Follow.
+6. **Creator dashboard** — Simplified to playerCount + completionCount on hunt detail screen. Per-stop analytics deferred to Fast Follow.
+7. **Race narrative** — "Claimed!" intentional race messaging deferred to post-MVP. MVP uses standard scan outcomes.
+8. **Hunt category** — Removed from creation form at MVP. Added when hunt browse is implemented.
+9. **Hunt progress display** — Fixed internal contradiction. "2 of 5 stops found!" wireframe artifact replaced with `progressPhase` approach (early/middle/late/final). No numeric counter during active play. `totalStops` revealed only at hunt completion.
+10. **Cognitive accessibility** — Updated from "5 tabs" to "4 tabs" for consistency.

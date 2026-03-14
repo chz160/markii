@@ -418,7 +418,7 @@ Structured log parameters (not string interpolation) from Day 1 so logs are quer
 │  Location (GEOGRAPHY(Point, 4326), GiST index)                   │
 │  OriginalDiscovererId (FK → Player)                              │
 │  CurrentControllerId (FK → Player, nullable)                     │
-│  CustomName (nullable, moderated)                                │
+│  CustomName (varchar 30, nullable, moderated)                     │
 │  Status (enum: Active, Suspended, Removed, Ghost, Relic — default Active) │
 │  ClaimRenewedAt (timestamptz, nullable)                          │
 │  CreatedAt (timestamptz)                                         │
@@ -432,7 +432,7 @@ Structured log parameters (not string interpolation) from Day 1 so logs are quer
 │  PlayerId (FK → Player)                                          │
 │  TaagId (FK → Taag)                                              │
 │  Location (GEOGRAPHY(Point, 4326))                               │
-│  Outcome (enum: FirstDiscovery, ClaimRenewal, Collection, etc.)  │
+│  Outcome (enum: FirstDiscovery, UnclaimedDiscovery, ClaimRenewal, Collection) │
 │  ScannedAt (timestamptz)                                         │
 │  IdempotencyKey (unique index) — client-generated UUID           │
 └──────────────────────────────────────────────────────────────────┘
@@ -441,8 +441,8 @@ Structured log parameters (not string interpolation) from Day 1 so logs are quer
 │                            Hunt                                  │
 │  Id (UUID PK)                                                    │
 │  CreatorId (FK → Player)                                         │
-│  Title (moderated)                                               │
-│  Description (moderated)                                         │
+│  Title (varchar 50, moderated)                                   │
+│  Description (varchar 200, moderated)                            │
 │  Status (enum: Draft, Published, Archived)                       │
 │  CompletionMessage (moderated)                                   │
 │  CreatedAt (timestamptz)                                         │
@@ -700,6 +700,7 @@ These rules run in frontend CI, catching violations at build time.
 | POST | `/api/v1/hunts/{huntId}/stops/reorder` | PromotedAccount (creator) | Reorder stops `{ stopIds: [...] }` |
 | POST | `/api/v1/hunts/{huntId}/join` | Authenticated | Join hunt → `HuntProgressDto` + first clue |
 | GET | `/api/v1/taags/{taagId}/location-context` | Authenticated | On-demand location enrichment for naming ceremony (returns cached data or triggers fast reverse geocode) |
+| GET | `/api/v1/players/{playerId}/profile` | Authenticated | Public player profile (`PlayerPublicProfileDto`) — aggregate stats only, no activity history |
 | GET | `/api/v1/players/me/collection` | Authenticated | My scanned Taags (derived from ScanEvents) |
 | GET | `/api/v1/players/me/hunts` | Authenticated | My active/completed hunts |
 | DELETE | `/api/v1/hunts/{huntId}` | PromotedAccount (creator) | Archive hunt (sets Status = Archived) |
@@ -707,7 +708,7 @@ These rules run in frontend CI, catching violations at build time.
 | DELETE | `/api/v1/taags/{taagId}/watchlist` | Authenticated | Remove Taag from watchlist |
 | GET | `/api/v1/players/me/watchlist` | Authenticated | My watchlisted Taags |
 | POST | `/api/v1/reports` | Authenticated | Submit a report |
-| GET | `/api/v1/leaderboards/{type}` | AllowAnonymous | `sourcers`, `scanners`, `hunters` |
+| GET | `/api/v1/leaderboards/{type}?period=` | AllowAnonymous | `sourcers`, `scanners`, `hunters`; optional `period` query param: `week`, `month`, `alltime` (default `alltime`) |
 | GET | `/api/v1/admin/reports` | AdminOnly | List reports (filterable by status) |
 | PUT | `/api/v1/admin/reports/{reportId}` | AdminOnly | Update report status (Reviewed/Dismissed) |
 | PUT | `/api/v1/admin/taags/{taagId}/status` | AdminOnly | Change Taag status (Active/Suspended/Removed) |
@@ -735,17 +736,19 @@ Client never sends a TaagId. QR content is the identifier from the client's pers
 
 **ScanResultDto (server → client):**
 ```
-outcome: ScanOutcome      — always present (firstDiscovery, unclaimedDiscovery, claimRenewal, collection, contestedClaim)
+outcome: ScanOutcome      — always present (firstDiscovery, unclaimedDiscovery, claimRenewal, collection)
 taag: TaagSummaryDto      — always present
 isNewDiscovery: bool      — always present
+previouslyScannedByUser: bool — true if requesting user has any prior ScanEvent for this Taag
 pioneerEligible: bool     — can this user name the Taag?
 claimStatus: string       — "claimed", "expired", "available"
 huntProgress: {           — nullable (only if scan advanced a hunt)
   huntId: uuid
   huntTitle: string
-  progressPhase: string   — "early", "middle", "late", "final" (server-computed, no numeric position leaked)
+  progressPhase: string   — "early", "middle", "late", "final" (server-computed, no numeric position leaked; thresholds: 0-25% early, 25-60% middle, 60-90% late, 90-100% final)
   nextClue: string?       — null if hunt just completed
   isComplete: bool
+  totalStops: int?        — populated only when isComplete is true (the completion reveal); null during active play
   nearbyHuntHints: [{     — nullable, max 2 items, only present when isComplete is true
     huntId: uuid
     huntTitle: string
@@ -776,12 +779,38 @@ discriminator: string           — first 4 chars of PlayerId (for display name 
 **LeaderboardDto:**
 ```
 type: string                    — "sourcers", "scanners", "hunters"
+period: string                  — "week", "month", "alltime"
 entries: [{
   rank: int
   player: PlayerSummaryDto
   score: int
 }]
 ```
+
+**PlayerPublicProfileDto:**
+```
+displayName: string
+discriminator: string           — first 4 chars of PlayerId
+taagsSourced: int               — COUNT of Taags where OriginalDiscovererId = this player
+totalScans: int                 — COUNT of ScanEvents for this player
+memberSince: DateTimeOffset     — Player.CreatedAt
+```
+
+**LocationContextDto (response for `GET /api/v1/taags/{taagId}/location-context`):**
+```
+neighborhoodName: string?       — reverse geocode result, nullable if not yet available
+venueName: string?              — detected business/venue name, nullable if not detectable
+nameSuggestions: string[]        — 0 to 3 AI-generated name suggestions based on location context
+```
+All fields nullable or empty. Returns 200 with whatever enrichment data is available at request time. If nothing is cached and reverse geocode hasn't completed, returns 200 with all nulls/empty — client proceeds without context. Taag personality graphic is excluded from this endpoint; it populates asynchronously on the Taag profile card.
+
+**HuntDetailDto (creator-only fields):**
+When the requesting user is the hunt's `CreatorId`, the response includes two additional fields:
+```
+playerCount: int?               — COUNT of HuntProgress records for this hunt (null for non-creators)
+completionCount: int?           — COUNT of HuntProgress WHERE CompletedAt IS NOT NULL (null for non-creators)
+```
+Per-stop analytics (attempt counts, drop-off rates) deferred to Fast Follow.
 
 **Location approximation:** Server truncates GPS to 2 decimal places (~1.1km precision) in DTO mapping for all public API responses. Precise coordinates stay in PostGIS. Truncation happens in the service layer, never exposed.
 
@@ -818,7 +847,9 @@ Entity name first, always plural. Current user uses `'me'`, other players use th
 
 **DB Write = Commit Point:** The scan itself always succeeds if the DB write succeeds. Everything after (Channel notification, async effects) is best-effort. Naming is a separate operation from scanning (separate endpoint, separate request). Moderation only runs on naming/UGC endpoints, never on every scan.
 
-**Concurrency Retry Pattern:** On `DbUpdateConcurrencyException` (e.g., simultaneous claim on contested Taag): reload entity from DB, re-evaluate business logic, retry once. If second attempt also fails, return 409 Conflict. Max 1 retry. Applies to all optimistic concurrency scenarios.
+**Concurrency Retry Pattern:** On `DbUpdateConcurrencyException` (e.g., simultaneous claim on unclaimed Taag): reload entity from DB, re-evaluate business logic, retry once. If second attempt also fails, return 409 Conflict. Max 1 retry. Applies to all optimistic concurrency scenarios. **Concurrent claim race condition:** Two users scan the same unclaimed Taag simultaneously. First transaction succeeds — outcome is `unclaimedDiscovery`, user becomes `CurrentControllerId`. Second transaction hits `DbUpdateConcurrencyException`. On retry, service reloads the Taag, sees it now has a controller, and processes the scan as `collection` with `previouslyScannedByUser: false`. The second user sees the Taag as freshly claimed — no error, no special handling, no `contestedClaim` outcome.
+
+**Hunt Publish Validation:** When status transitions from Draft to Published, `HuntService` validates `COUNT(HuntStops) >= 2`. If fewer than 2 stops, returns `hunt-not-publishable` Problem Details (422). No maximum stop cap at MVP.
 
 **Client Error Handling (4 rules):**
 1. **429** → silent retry with backoff (never show to user)
@@ -833,11 +864,11 @@ Never show HTTP status codes, raw error messages, or technical details to the us
 **Offline Scan Queue Drain:** When connectivity resumes, drain at 1 scan every 2 seconds (fixed 2000ms interval via TanStack Query `retryDelay`). This rate stays within the 30/min authenticated rate limit. Show progress: "Syncing 47 of 312 scans..." Queue is manually orchestrated via `useMutation` with `onSettled` triggering next item. Large queues (500+ scans) take ~17 minutes to sync — the batch endpoint (`POST /api/v1/scans/batch`) is the priority post-MVP improvement.
 
 **ScannerService Decision Flow (client-side):**
-1. `onCodeScanned(data)` → check content length ≤ 2048 (reject if longer)
+1. `onCodeScanned(data)` or manual text entry → check content length ≤ 2048 (reject if longer)
 2. Check if TaagBack URL → route to deep link handler, return (no API call)
 3. Otherwise → call scan API mutation with `ScanRequestDto`
 
-Three steps, in order, before any API call.
+Three steps, in order, before any API call. Manual code entry (text input on scan screen) feeds the same pipeline — `ManualCodeEntry` component calls the same `useScanMutation` hook with user-typed/pasted content.
 
 **Validation Pattern:**
 - Client-side: validate for UX only (field length, required fields). Never trust.
@@ -977,6 +1008,7 @@ TaagBack.Api/
 │   ├── PlayerService.cs
 │   └── Models/
 │       ├── PlayerProfileDto.cs
+│       ├── PlayerPublicProfileDto.cs     # Aggregate stats for public viewing
 │       ├── PlayerSummaryDto.cs
 │       ├── CollectionItemDto.cs
 │       └── Player.cs                     # Entity
@@ -1104,6 +1136,7 @@ TaagBack/
 │   │   │   └── ErrorBoundary.tsx         # Top-level + per-screen boundaries
 │   │   ├── scanning/
 │   │   │   ├── ScannerView.tsx
+│   │   │   ├── ManualCodeEntry.tsx          # Text input fallback for pasting/typing QR content
 │   │   │   └── ScanResultOverlay.tsx
 │   │   ├── taags/
 │   │   │   ├── TaagCard.tsx
@@ -1475,6 +1508,12 @@ Naming conventions cover all layers. Process patterns cover all critical flows i
 - Hot-Taag contention under extreme concurrent scans — retry-once handles MVP scale, documented as first scaling bottleneck
 - UUIDv7 deep links are long — digital sharing hides URL behind preview cards, vanity URLs post-MVP
 - DisplayName discriminator (first 4 chars of PlayerId) — negligible collision risk at MVP scale
+- No in-app notification feed — push notifications only at MVP; persistent notification feed with read/unread states is Fast Follow
+- No hunt browse/discovery endpoint — hunts discovered organically via scanning or via deep links; spatial hunt discovery (`GET /api/v1/hunts?lat=&lng=&radiusMeters=`) is Fast Follow
+- No geographic leaderboard scope — leaderboards filtered by time period only (`week`, `month`, `alltime`); neighborhood/city/global filtering is Fast Follow
+- Creator analytics limited to `playerCount` and `completionCount` on `HuntDetailDto` — per-stop analytics (attempt counts, drop-off) deferred to Fast Follow
+- No race narrative on contested claims — `contestedClaim` outcome removed from enum; concurrent claim race handled transparently via retry; competitive messaging deferred to post-MVP
+- Offline hunt play removed from scope — hunts require connectivity for progression; queued offline scans advance hunts upon sync
 
 ### Architecture Completeness Checklist
 
@@ -1547,6 +1586,33 @@ Naming conventions cover all layers. Process patterns cover all critical flows i
 - Match existing patterns in the codebase before consulting this document
 - Provider-specific names belong in configuration only, never in code
 - Run guardrail tests after every significant change
+
+### UX ↔ Architecture Alignment (2026-03-14)
+
+The following decisions were made in a cross-functional alignment review between Architect, UX Designer, and Product Manager. See `_bmad-output/planning-artifacts/ux-architecture-alignment-review-2026-03-14.md` for the full review document.
+
+**Changes applied to this architecture document:**
+1. `ScanOutcome` enum reduced from 5 to 4 values — `contestedClaim` removed. Concurrent claim race handled transparently via retry (second claimant gets `collection`).
+2. `previouslyScannedByUser: bool` added to `ScanResultDto` — enables UX differentiation between "first time seeing someone else's Taag" and "repeat scan of a known Taag."
+3. `totalStops: int?` added to `huntProgress` block in `ScanResultDto` — populated only on completion (`isComplete: true`), supports the hunt completion reveal moment.
+4. `progressPhase` thresholds documented: 0-25% early, 25-60% middle, 60-90% late, 90-100% final. Tunable server-side constants.
+5. Leaderboard endpoint gains `?period=week|month|alltime` query parameter (default `alltime`). Geographic scope deferred to Fast Follow.
+6. `playerCount` and `completionCount` added to `HuntDetailDto` for creator-only viewing. Per-stop analytics deferred to Fast Follow.
+7. `GET /api/v1/players/{playerId}/profile` endpoint added — `PlayerPublicProfileDto` with aggregate stats (taagsSourced, totalScans, memberSince). No activity history.
+8. Character limits added: `Hunt.Title` varchar 50, `Hunt.Description` varchar 200, `Taag.CustomName` varchar 30.
+9. Minimum 2 stops validation on hunt publish (Draft → Published) documented.
+10. `ManualCodeEntry.tsx` component added to frontend project tree — text input fallback on scan screen, same pipeline as camera scan.
+11. `LocationContextDto` response shape defined: `neighborhoodName`, `venueName`, `nameSuggestions[]`. All nullable. Taag personality graphic excluded.
+12. Hunt publish validation added: `hunt-not-publishable` Problem Details (422) when fewer than 2 stops.
+
+**Deferred to Fast Follow (not in MVP):**
+- In-app notification feed (push only at MVP)
+- Hunt browse/discovery endpoint and Hunts tab
+- Map tab
+- Geographic leaderboard scope (neighborhood/city/global)
+- Per-stop creator analytics
+- Competitive race narrative on contested claims
+- Offline hunt playability (cut from scope entirely)
 
 **First Implementation Priority:**
 1. Re-scaffold backend via `dotnet new webapi` with Step 6 project tree
