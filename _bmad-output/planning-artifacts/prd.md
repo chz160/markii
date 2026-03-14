@@ -113,7 +113,7 @@ The MVP rests on three self-reinforcing pillars: a **Hunt Builder** for sequenci
 
 **Mia, 14, High Schooler** — Walking past a coffee shop after school, she notices a QR code on the window. She's already installed TaagBack after a friend shared a hunt completion screenshot on Instagram.
 
-**Opening Scene:** Mia opens TaagBack and points her camera at the coffee shop QR code. She has no expectations — just curiosity.
+**Opening Scene:** Mia opens TaagBack for the first time. A quick, playful registration flow greets her — this is the app's first signature UX moment. She creates her account in seconds, picking a display name and confirming her age. The app celebrates her arrival before she's even scanned anything. Now she points her camera at the coffee shop QR code. She has no expectations — just curiosity.
 
 **Rising Action:** The screen erupts. Confetti, fanfare, a celebratory animation. "You're the FIRST person to bring this Taag into TaagBack!" Mia just became a Pioneer. The app prompts her to name her Taag — AI suggests "Java Junction" based on GPS context. She picks it. The app explains: re-scan this code once a month to keep your name on it. She feels ownership — this is HER Taag now.
 
@@ -121,7 +121,7 @@ The MVP rests on three self-reinforcing pillars: a **Hunt Builder** for sequenci
 
 **Resolution:** Mia has 3 Taags in her collection, 2 she pioneered and named. She's #1 on her neighborhood leaderboard (nobody else is playing yet — she IS the leaderboard). She shares a screenshot. Three friends download the app that night.
 
-**Capabilities Revealed:** QR scanning and interception, pioneer celebration, AI-assisted naming, content moderation, re-scan explanation, collection tracking, already-claimed experience, watchlist, leaderboards, social sharing moments.
+**Capabilities Revealed:** Account registration as signature UX moment, QR scanning and interception, pioneer celebration, AI-assisted naming, content moderation, re-scan explanation, collection tracking, already-claimed experience, watchlist, leaderboards, social sharing moments.
 
 ### Journey 2: The Adventurer's Hunt Experience (Primary User - Full Loop)
 
@@ -210,7 +210,7 @@ The MVP rests on three self-reinforcing pillars: a **Hunt Builder** for sequenci
 - GDPR (if serving EU users): explicit informed consent, purpose limitation, data minimization, right to erasure.
 
 **Content Moderation:**
-- Automated text moderation on all UGC (Taag names, clue text, hunt descriptions, completion messages) using OpenAI Moderation API.
+- Automated text moderation on all UGC (Taag names, clue text, hunt descriptions, completion messages) using an automated text moderation service.
 - Community reporting system with flag/report on any Taag or hunt.
 - Playful rejection of inappropriate content ("Nice try! How about something your grandma would approve of?").
 - Content moderation review queue for escalated reports.
@@ -228,7 +228,7 @@ The MVP rests on three self-reinforcing pillars: a **Hunt Builder** for sequenci
 
 | Risk | Mitigation |
 |------|-----------|
-| COPPA violation | Age gate before any personal data collection. Anonymous scanning phase collects no personal data. VPC flow for under-13. |
+| COPPA violation | Age gate at account creation on first launch. VPC flow for under-13. |
 | Location data breach | Encrypt at rest and in transit. Collect minimum precision. No raw location sharing. Retention limits. |
 | Offensive UGC | Automated moderation + community reporting + admin escalation. Playful rejection tone. |
 | Location liability | TOS + safety reminders + property owner opt-out + community reporting. Structural advantage: TaagBack doesn't place objects on private property. |
@@ -293,7 +293,7 @@ Niantic's Wayfarer requires nomination, community review, and approval (days to 
 
 ### Push Notification Strategy
 
-- **MVP:** Expo Push Notifications (free, managed). Backend stores Expo push tokens per user.
+- **MVP:** Managed push notification service. Backend stores push tokens per user.
 - **Triggers:** Watchlist Taag becomes uncontested, claimed Taag expired, hunt invitation via deep link, community report action taken.
 - **Design principle:** Notifications must feel valuable, not spammy. Each notification type has independent opt-out. Default to conservative — fewer notifications is better.
 
@@ -335,7 +335,7 @@ Niantic's Wayfarer requires nomination, community review, and approval (days to 
 **Supporting:**
 - Safety reminders and contextual TOU gate
 - Community reporting system
-- User authentication: anonymous-first with account promotion (Firebase Auth)
+- User authentication: account required on first launch
 - Age gate at account creation (COPPA)
 
 ### Post-MVP Features (Phase 2)
@@ -351,6 +351,9 @@ Niantic's Wayfarer requires nomination, community review, and approval (days to 
 - Social sharing at peak moments
 - QR encoded URL background analytics
 - PWA web entry point
+- Photo Finish (completion photos/videos at hunt end)
+- Highlight Stops (creator-designated special stops with enhanced celebrations)
+- Celebration Progression (evolving celebration complexity based on user achievements)
 
 ### Vision Features (Phase 3)
 
@@ -366,14 +369,15 @@ Niantic's Wayfarer requires nomination, community review, and approval (days to 
 - Data insights monetization (anonymized, aggregated, with legal framework)
 - Pioneer Events for geographic expansion
 - Context-aware dynamic QR content
+- Travel-Aware Claiming (adjusting claim mechanics based on geographic distance)
 
 ### Risk Mitigation Strategy
 
-**Technical Risk:** The critical path is migrating from in-memory storage to PostgreSQL + PostGIS. All other features depend on persistent storage. Mitigate by prioritizing database migration in Sprint 1. Stack is validated — no novel technology risk.
+**Technical Risk:** The critical path is migrating from in-memory storage to a persistent database. All other features depend on persistent storage. Mitigate by prioritizing database migration in Sprint 1. Stack is validated — no novel technology risk.
 
 **Market Risk:** Cold start problem — the platform needs Taags to have value, but needs players to create Taags. Mitigate with focused geographic launch (2-3 QR-dense areas: university campuses, downtown districts) and Pioneer Event gamification for early adopters.
 
-**Resource Risk:** Solo developer. Mitigate by keeping MVP scope tight (three pillars only), leveraging managed services (Firebase Auth, EAS Build, Azure PaaS), and deferring Redis, AI features, and real-time until Phase 2.
+**Resource Risk:** Solo developer. Mitigate by keeping MVP scope tight (three pillars only), leveraging managed services, and deferring Redis, AI features, and real-time until Phase 2.
 
 ## Functional Requirements
 
@@ -383,8 +387,8 @@ Niantic's Wayfarer requires nomination, community review, and approval (days to 
 - FR2: The system can extract raw encoded data from a QR code before URL resolution.
 - FR3: The system can create a unique Taag record from a QR code's encoded data and GPS coordinates.
 - FR4: Users can view a Taag's profile card showing its name, Original Discoverer, Current Controller, and scan metadata.
-- FR5: Users can claim an unclaimed Taag by being the first to scan it.
-- FR6: Users can assign a custom name to a Taag they control, subject to content moderation.
+- FR5: Users can claim an unclaimed Taag by being the first authenticated user to scan it.
+- FR6: Users can assign a custom name to a Taag they control, subject to content moderation. Account required.
 - FR7: The system can suggest contextual Taag names based on GPS location data (Phase 2 — Gen AI).
 - FR8: The system can maintain three-tier attribution for each Taag: Original Discoverer (permanent), Current Controller (maintainable), Custom Name (set by controller).
 
@@ -403,50 +407,61 @@ Niantic's Wayfarer requires nomination, community review, and approval (days to 
 - FR16: Users can claim a previously claimed Taag after its prior claim has expired.
 - FR17: The system can notify the previous controller when their claim expires.
 - FR18: The system can notify watchlist subscribers when a Taag becomes uncontested.
+- FR19: The system can send a pre-expiration warning notification when a user's Taag claim is within 1 day of the 30-day maintenance deadline.
 
 ### Hunt Creation & Management
 
-- FR19: Users can create a new hunt with a title and description.
-- FR20: Users can add Taags to a hunt as sequenced stops with clue text (draft-as-you-go mode).
-- FR21: Users can add Taags to a hunt from a map view showing all sourced Taags in an area (map-based builder mode).
-- FR22: Users can reorder stops within a hunt.
-- FR23: Users can write a custom completion message displayed when a player finishes the hunt.
-- FR24: Users can publish a draft hunt to make it playable.
-- FR25: The system can generate a shareable deep link for a published hunt.
+- FR20: Users can create a new hunt with a title and description.
+- FR21: Users can add Taags to a hunt as sequenced stops with clue text (draft-as-you-go mode).
+- FR22: Users can add Taags to a hunt from a map view showing all sourced Taags in an area (map-based builder mode).
+- FR23: Users can reorder stops within a hunt.
+- FR24: Users can write a custom completion message displayed when a player finishes the hunt.
+- FR25: Users can optionally add a hint to any hunt stop to assist players who are stuck.
+- FR26: Users can publish a draft hunt to make it playable.
+- FR27: The system can generate a shareable deep link for a published hunt. Where feasible, deep link context should survive app installation for users who don't yet have the app.
 
 ### Hunt Play & Progression
 
-- FR26: Users can discover hunts by scanning a Taag that is part of an active hunt.
-- FR27: Users can accept a hunt invitation and begin the clue sequence.
-- FR28: The system can present clues sequentially — revealing the next clue only after the current stop is scanned.
-- FR29: The system can verify a scan against the expected stop using QR token matching and geofence verification.
-- FR30: The system can display the blackout crescendo celebration upon hunt completion.
-- FR31: The system can display the creator's custom completion message after the celebration.
-- FR32: Users can view their hunt completion stats and rank on the hunt leaderboard.
+- FR28: Users can discover hunts by scanning a Taag that is part of an active hunt.
+- FR29: Users can accept a hunt invitation and begin the clue sequence.
+- FR30: The system can present clues sequentially — revealing the next clue only after the current stop is scanned.
+- FR31: The system can offer a hint to players after 3 unsuccessful scan attempts at a stop, but only if the hunt creator provided a hint for that stop.
+- FR32: The system can verify a scan against the expected stop using QR token matching and geofence verification.
+- FR33: The system can display the blackout crescendo celebration upon hunt completion.
+- FR34: The system can display the creator's custom completion message after the celebration.
+- FR35: Users can view their hunt completion stats and rank on the hunt leaderboard.
 
 ### Safety, Moderation & Reporting
 
-- FR33: The system can display a safety reminder and TOU acceptance gate before a user's first hunt.
-- FR34: The system can filter user-submitted text (Taag names, clues, descriptions, completion messages) through automated content moderation.
-- FR35: Users can report any Taag or hunt for community guideline violations.
-- FR36: Admins can review reported content in a moderation queue.
-- FR37: Admins can reset a Taag's custom name, issue user warnings, or restrict accounts.
-- FR38: The system can reject inappropriate custom names with a playful, non-punitive message.
+- FR36: The system can display a safety reminder and TOU acceptance gate before a user's first hunt.
+- FR37: The system can filter user-submitted text (Taag names, clues, descriptions, completion messages) through automated content moderation.
+- FR38: Users can report any Taag or hunt for community guideline violations.
+- FR39: Admins can review reported content in a moderation queue.
+- FR40: Admins can reset a Taag's custom name, issue user warnings, or restrict accounts.
+- FR41: The system can reject inappropriate custom names with a playful, non-punitive message.
 
 ### Authentication & User Management
 
-- FR39: Users can use the app anonymously for initial scanning and discovery without creating an account.
-- FR40: Users can create an account to unlock claiming, hunt creation, and leaderboard features.
-- FR41: The system can promote an anonymous user to an authenticated account, preserving all scan history and collection data.
-- FR42: The system can require age verification at account creation and enforce COPPA-compliant flows for users under 13.
-- FR43: Users can authenticate via email/password or social login (Google Sign-In, Apple Sign-In).
+- FR42: Users can create an account on first app launch to access all platform features (scanning, claiming, naming, hunt creation, leaderboards).
+- FR43: The system can require account creation on first app launch before allowing any platform interaction.
+- FR44: The system can require age verification at account creation and enforce COPPA-compliant flows for users under 13.
+- FR45: Users can authenticate via email/password or social login (Google Sign-In, Apple Sign-In).
 
 ### Data Integrity & Anti-Fraud
 
-- FR44: The system can detect and invalidate duplicate/mass-produced QR codes scanned at significantly different GPS locations (snack wrapper problem).
-- FR45: The system can flag impossible movement speeds between consecutive scans from the same user.
-- FR46: The system can verify physical presence via geofence check (GPS coordinates within configurable radius of stop location) before accepting a scan.
-- FR47: The system can enforce rate limiting on scan attempts per user.
+- FR46: The system can detect and invalidate duplicate/mass-produced QR codes scanned at significantly different GPS locations (snack wrapper problem).
+- FR47: The system can flag impossible movement speeds between consecutive scans from the same user.
+- FR48: The system can verify physical presence via geofence check (GPS coordinates within configurable radius of stop location) before accepting a scan.
+- FR49: The system can enforce rate limiting on scan attempts per user.
+
+### Location Intelligence
+
+- FR50: Users can capture an image of the QR code's surroundings during the scan process.
+- FR51: The system can upload scan images asynchronously without blocking the scan result flow.
+- FR52: The system can extract EXIF metadata (GPS coordinates, compass bearing, estimated distance) from scan images to triangulate Taag location.
+- FR53: The system can refine Taag location using triangulated data from multiple scan images over time.
+- FR54: The system can enrich Taag profiles with contextual data from external sources (reverse geocoding, nearby points of interest).
+- FR55: The system can process uploaded images through vision analysis to extract contextual data (business type, surroundings, name suggestions, Taag personality graphic), then delete source images after processing.
 
 ## Non-Functional Requirements
 
@@ -461,17 +476,17 @@ Niantic's Wayfarer requires nomination, community review, and approval (days to 
 ### Security
 
 - NFR6: All API communication encrypted via TLS 1.2+.
-- NFR7: Authentication tokens stored in platform secure storage (iOS Keychain / Android Keystore) — never in AsyncStorage or local storage.
-- NFR8: All user-facing text inputs validated server-side against injection attacks (parameterized queries via EF Core).
+- NFR7: Authentication tokens stored in platform-provided secure storage — never in client-side local storage.
+- NFR8: All user-facing text inputs validated server-side against injection attacks using parameterized queries.
 - NFR9: CORS restricted to known origins in production (not the current open-any-origin dev configuration).
-- NFR10: Firebase JWT validated on every authenticated API request.
-- NFR11: Platform attestation (Play Integrity / DeviceCheck) validated for scan claims.
+- NFR10: JWT validated on every authenticated API request.
+- NFR11: Platform attestation validated for scan claims to verify requests originate from the authentic app on a genuine device.
 
 ### Scalability
 
 - NFR12: System supports up to 10,000 concurrent users on MVP infrastructure (<$80/month).
-- NFR13: Taag database handles up to 500,000 unique Taags without performance degradation on a single PostgreSQL + PostGIS instance.
-- NFR14: Architecture supports horizontal scaling via read replicas and Redis cache addition without application rewrite.
+- NFR13: Taag database handles up to 500,000 unique Taags without performance degradation on a single database instance with geospatial capability.
+- NFR14: Architecture supports horizontal scaling via read replication and caching layer addition without application rewrite.
 
 ### Privacy & Data Handling
 
@@ -486,3 +501,7 @@ Niantic's Wayfarer requires nomination, community review, and approval (days to 
 - NFR20: API maintains 99.5% uptime measured monthly.
 - NFR21: Offline-queued scan claims sync correctly when connectivity returns with zero data loss.
 - NFR22: Idempotency keys prevent duplicate scan records on network retry.
+
+### Audio
+
+- NFR23: Audio signatures for celebrations must be designed and integrated before public release. Celebrations must be visually complete without audio for initial development phases.

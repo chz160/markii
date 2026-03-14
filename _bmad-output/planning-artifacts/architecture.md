@@ -37,8 +37,8 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 | Hunt Creation & Management | FR19-FR25 | Dual creation modes (field + map) are a **client-side concern** — the API receives the same payload regardless. Server-side: ordered list CRUD with a status flag. Deep link generation is a URL with a hunt ID. |
 | Hunt Play & Progression | FR26-FR32 | Sequential clue reveal, geofence + QR token verification at each stop. The architecturally significant query is the **scan-time hunt progression check** — "is this QR code the next stop in any active hunt for this user?" This runs on every scan for every user with an active hunt. |
 | Safety, Moderation & Reporting | FR33-FR38 | Single moderation function (`CheckText`) wrapping OpenAI Moderation API with regex blocklist fallback. Called inline before every UGC save — Taag names, clue text, hunt descriptions, completion messages. No separate modes needed; all UGC write paths have natural user pauses that tolerate 100-200ms. |
-| Authentication & User Management | FR39-FR43 | Anonymous-first → account promotion via Firebase Auth with `linkWithCredential()`. Wrapped in a **client-side auth abstraction layer** so the Firebase SDK is swappable. Supabase Auth (GoTrue) documented as migration target. |
-| Data Integrity & Anti-Fraud | FR44-FR47 | Duplicate QR detection ("snack wrapper problem"), impossible travel flagging, geofence verification. Rate limiting per ADR-5: scan endpoint 30/min authenticated, 10/hour anonymous; Taag detail 60/min; global 100/min per IP. |
+| Authentication & User Management | FR39-FR43 | Account required on first launch. Firebase Auth for social login and JWT. Wrapped in client-side auth abstraction layer for portability. Supabase Auth (GoTrue) documented as migration target. |
+| Data Integrity & Anti-Fraud | FR44-FR47 | Duplicate QR detection ("snack wrapper problem"), impossible travel flagging, geofence verification. Rate limiting per ADR-5: scan endpoint 30/min authenticated; Taag detail 60/min; global 100/min per IP. |
 
 **Non-Functional Requirements (22 NFRs across 5 domains):**
 
@@ -47,7 +47,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 | Performance | <500ms p95 scan response, <2s end-to-end QR-to-UI, <4s cold start | Scan pipeline must be optimized: minimal DB round-trips, async side-effects via `Channel<T>`, `IMemoryCache` with 30-second TTL for leaderboard/lookup caching. **Scan p95 time budget:** DB lookup by NormalizedContent (~50ms with index) + Taag create/update (~30ms) + ScanEvent insert (~20ms) + hunt progression check (~30ms with HuntStop(TaagId) index) + Channel write (~0ms) + serialization (~5ms) = **~135ms server-side**, well within 500ms. Moderation (100-200ms) only runs on naming requests, not on every scan. |
 | Security | TLS 1.2+, secure token storage, server-side validation, CORS restriction, Firebase JWT, platform attestation | Defense-in-depth: every layer validates independently. No client trust. |
 | Scalability | 10K concurrent users on <$80/month, 500K Taags on single PostgreSQL, horizontal scaling without rewrite | Feature-folder monolith with clean boundaries. Redis and read replicas as growth-phase additions — not MVP. |
-| Privacy & Data Handling | Minimum GPS precision, no raw location sharing, 45-day deletion, GPC signals, COPPA for under-13 | Privacy-by-design: data minimization at collection. **Anonymous-phase client storage must be COPPA-safe** — no GPS coordinates cached locally until age verification is complete. Offline scan queue for anonymous users stores QR content only, not location. |
+| Privacy & Data Handling | Minimum GPS precision, no raw location sharing, 45-day deletion, GPC signals, COPPA for under-13 | Privacy-by-design: data minimization at collection. Age gate at account creation on first launch. |
 | Reliability | 99.5% uptime, zero-loss offline sync, idempotency on retries | **"Zero-loss" applies to scan data** — guaranteed via client-generated idempotency keys + retry queue. Push notifications are best-effort (bounded Channel may drop under load — acceptable trade-off). Scans use explicit `IdempotencyKey`; all other mutations (Taag naming, hunt CRUD, claims) are idempotent by design via PUT semantics or unique constraints. Simple retry queue for offline scans (not an elaborate outbox pattern). |
 
 **Scale & Complexity:**
@@ -63,11 +63,11 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 | .NET 10 LTS + C# 13 | Existing codebase | Backend language and framework locked. Supported through Nov 2028. |
 | React Native 0.83 / Expo SDK 55 | Existing codebase | Frontend framework locked. New Architecture mandatory (Fabric, TurboModules, JSI). |
 | PostgreSQL + PostGIS | Technical research validation | Spatial queries are foundational. EF Core + Npgsql + NetTopologySuite integration. |
-| Firebase Auth (with abstraction) | Technical research recommendation | Anonymous-first pattern, social login, JWT validation. Free to 50K MAU. Client-side auth abstraction layer required for portability. Supabase Auth (GoTrue) as documented exit strategy. |
+| Firebase Auth (with abstraction) | Technical research recommendation | Account-required pattern, social login, JWT validation. Free to 50K MAU. Client-side auth abstraction layer required for portability. Supabase Auth (GoTrue) as documented exit strategy. |
 | react-native-vision-camera | Core product premise — QR interception at decoder level | **Strategic dependency risk.** Single maintainer (mrousavy). Entire product is downstream of `onCodeScanned`. Mitigation: wrap in `ScannerService` abstraction, pin version, monitor repo health. Fallback: contained native module rewrite behind the abstraction. |
 | Solo developer | Resource context | Architecture must favor simplicity, managed services, and automation. No abstractions without immediate need. |
 | Cloud-agnostic hosting | Architectural decision | All technology choices portable (PostgreSQL, Redis, containerized .NET, Firebase Auth, Expo Push). No cloud-proprietary services in application code. Infrastructure config (Terraform/CDK) is the only cloud-specific layer. |
-| COPPA compliance (April 2026) | Regulatory deadline | Age gate, VPC flow, data handling for minors, anonymous-phase COPPA-safe client storage must be in MVP. |
+| COPPA compliance (April 2026) | Regulatory deadline | Age gate at account creation, VPC flow, data handling for minors must be in MVP. |
 | In-memory storage → PostgreSQL migration | Critical path | Current `List<T>` stores must be replaced before any other feature work. |
 | Normalized QR content as primary lookup key | First principles analysis | Normalize URL (lowercase scheme/host, strip trailing slash, sort query params) and store as lookup key with unique index. Human-readable, debuggable, fast. No content hashing. |
 
@@ -75,13 +75,13 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 
 | Concern | Affected Components | Architectural Strategy |
 |---------|-------------------|----------------------|
-| **Authentication lifecycle** | Every API endpoint | Firebase Auth with anonymous → authenticated promotion. `[Authorize]` / `[AllowAnonymous]` per endpoint. Client-side auth abstraction layer for SDK portability. Account promotion must queue gracefully if Firebase is unreachable — never block the user from continuing in anonymous mode. **Firebase App Check** (Play Integrity / DeviceCheck) for device attestation — verifies requests come from the real app on a real device. Free tier covers MVP scale. **Anonymous accounts cannot set custom Taag names** — only promoted (age-verified) accounts can name Taags (COPPA protection against minors submitting PII). Anonymous users still get Pioneer credit; name field stays blank until a promoted account claims naming rights. **JWKS resilience:** ASP.NET Core caches Firebase JWKS after first fetch. On API restart during Firebase outage, retry JWKS fetch with exponential backoff (up to 60s). If fetch fails, start in degraded auth mode: anonymous endpoints work, authenticated endpoints return 503 "Auth service unavailable" (not 401). Log degraded state loudly. |
+| **Authentication lifecycle** | Every API endpoint | Account creation is the first user interaction on app launch. Firebase Auth for social login and JWT. `[Authorize]` / `[AllowAnonymous]` per endpoint. Client-side auth abstraction layer for SDK portability. **Firebase App Check** (Play Integrity / DeviceCheck) for device attestation — verifies requests come from the real app on a real device. Free tier covers MVP scale. **JWKS resilience:** ASP.NET Core caches Firebase JWKS after first fetch. On API restart during Firebase outage, retry JWKS fetch with exponential backoff (up to 60s). If fetch fails, start in degraded auth mode: authenticated endpoints return 503 "Auth service unavailable" (not 401). Log degraded state loudly. |
 | **Spatial data** | Taags, Hunts, Stops, Scans, Leaderboards | PostGIS `GEOGRAPHY(Point, 4326)` with GiST indexes. NetTopologySuite in EF Core. |
 | **Content moderation** | Taag names, clue text, hunt descriptions, completion messages | Single `CheckText` function: OpenAI Moderation API with regex blocklist fallback. Called inline before every UGC save. 100-200ms latency acceptable in all write paths. **Resilience chain:** (1) HttpClient timeout 2 seconds on OpenAI call, (2) on timeout/error → fall back to regex blocklist only, (3) circuit breaker — after 3 consecutive OpenAI failures, skip API call for 5 minutes (blocklist only), log every skip, reset after successful call. **Never block the user from naming** — worst case, a marginal name passes during an outage and is caught in periodic review. |
 | **Event dispatch** | Scan processing → push notifications | **Bounded** `Channel<ScanNotification>` (capacity ~1000) + one `BackgroundService` consumer at MVP. When full, `TryWrite` returns false — scan still succeeds, notification is dropped and logged. Only async side effect is push notification dispatch. No mediator framework. Add typed messages when 3+ distinct async effects exist. `Task.Run` is banned — always use `BackgroundService`. Notifications are "nice to have" — scan success is critical. Lost notifications during outage are acceptable at MVP vs. adding a durable queue. |
 | **Offline resilience** | Scan claims, hunt data | Two distinct client-side subsystems: (1) **Scan retry queue** — simple retry with idempotency tokens. Server timestamp wins (no temporal fairness). **Drain throttle: 1 scan/second** when reconnecting (not all at once) to avoid hitting rate limiter. Show progress: "Syncing 47 of 312 scans..." Batch endpoint (`POST /api/v1/scans/batch`) is a documented post-MVP improvement. (2) **Hunt data cache** — pre-cache when user joins a hunt, non-negotiable for real-world play. `IMemoryCache` with 30-second TTL on server side is the entire caching architecture at MVP. |
-| **Regulatory compliance** | User registration, data collection, location tracking, UGC | COPPA age gate at account creation, GPC signal handling, minimum-precision GPS, 45-day deletion SLA. Anonymous-phase client storage: QR content only, no GPS, until age verification complete. |
-| **Rate limiting & anti-fraud** | Scan endpoint, Taag detail/spatial endpoints, global fallback | Built-in .NET rate limiting middleware. Scan endpoint: token bucket 30/min per authenticated user, **10/hour for anonymous users** (enough for casual play, painful for bots). `GET /api/v1/taags/{id}` and `GET /api/v1/taags?lat=&lng=&radiusMeters=`: 60/min per user (prevents enumeration/scraping of the Taag databank). Global: fixed window 100/min per IP. Client handles 429 with retry + backoff, never shows error to user. |
+| **Regulatory compliance** | User registration, data collection, location tracking, UGC | COPPA age gate at account creation on first launch, GPC signal handling, minimum-precision GPS, 45-day deletion SLA. |
+| **Rate limiting & anti-fraud** | Scan endpoint, Taag detail/spatial endpoints, global fallback | Built-in .NET rate limiting middleware. Scan endpoint: token bucket 30/min per authenticated user. `GET /api/v1/taags/{id}` and `GET /api/v1/taags?lat=&lng=&radiusMeters=`: 60/min per user (prevents enumeration/scraping of the Taag databank). Global: fixed window 100/min per IP. Client handles 429 with retry + backoff, never shows error to user. |
 | **Scan pipeline resilience** | All downstream systems | Single ingest point for all platform data. Requires circuit breakers on downstream dependencies (moderation, event channel). Graceful degradation: scan succeeds even if notification dispatch fails. Health monitoring on scan endpoint as primary availability signal. **Input validation at the boundary:** max QR content length 2048 chars (reject longer). **Scheme whitelist for normalization:** only `http://` and `https://` URLs are normalized; all other content types (tel:, mailto:, javascript:, raw text) stored as-is in `RawContent` with raw string as lookup key. The normalization function is a **security-critical boundary** — first server-side code to process attacker-controlled input from the physical world. Dedicated test suite, review required on any change. **Self-referential URL detection:** if QR content matches TaagBack's own domain/deep link scheme, the client routes to the deep link handler (e.g., open a hunt), NOT the scan API — no Taag is created for TaagBack URLs. This is a client-side ScannerService responsibility. **Simultaneous first-scan race condition:** unique constraint on `NormalizedContent` prevents duplicate Taags. On `DbUpdateException` (unique violation), the scan service catches the error, reloads the existing Taag, and processes the scan as a Collection event instead of FirstDiscovery. The second user never sees an error — they just aren't the pioneer. |
 | **Notification budgeting** | Push notifications | Aggregate maintenance notifications per user per period. Priority tiers: watchlist alerts > claim expiry warnings > general updates. Daily digest for low-priority at MVP. Volume scales linearly with engagement — design for this from Day 1. |
 | **Hunt integrity** | Hunt play, creator tools | Detect when hunt stops become unreachable (Taag not scanned by anyone for N days, URL dead). Creator alerts for broken hunts. Skip/report as API-level capability. |
@@ -97,7 +97,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 | **ADR-2: Event Dispatch** | Single `Channel<T>` + `BackgroundService`. No mediator framework (no MediatR, no Wolverine). | One async side effect at MVP (push notifications) doesn't justify a framework. Add typed messages when 3+ effects exist. |
 | **ADR-3: API Versioning** | URL path versioning (`/api/v1/`) from Sprint 1 via `Asp.Versioning.Http`. Unversioned requests default to v1. OpenAPI spec generated from versioned endpoints as mobile client contract. | Mobile clients in the wild can't be force-updated. 30 minutes of setup prevents days of pain. |
 | **ADR-4: Database Access** | No repository pattern. Services inject `DbContext` directly. No `DbContext` in controllers. No EF entities in API responses — services return DTOs. Testing via Testcontainers (PostgreSQL). | EF Core is already UoW + Repository. PostGIS dependency makes DB independence impossible. DTOs decouple entity model from API contract. |
-| **ADR-5: Rate Limiting** | Built-in .NET middleware. Scan endpoint: token bucket 30/min per authenticated user, 10/hour for anonymous. Taag detail endpoint: 60/min per user (anti-scraping). Global fallback: fixed window 100/min per IP. | Scan endpoint is the highest-traffic, abuse-targetable endpoint. Anonymous rate limit prevents bot farms. Taag detail limit protects the databank from enumeration. Add policies when abuse patterns are observed. |
+| **ADR-5: Rate Limiting** | Built-in .NET middleware. Scan endpoint: token bucket 30/min per authenticated user. Taag detail endpoint: 60/min per user (anti-scraping). Global fallback: fixed window 100/min per IP. | Scan endpoint is the highest-traffic, abuse-targetable endpoint. All users are authenticated. Taag detail limit protects the databank from enumeration. Add policies when abuse patterns are observed. |
 
 ## Starter Template Evaluation
 
@@ -403,9 +403,8 @@ Structured log parameters (not string interpolation) from Day 1 so logs are quer
 ┌──────────────────────────────────────────────────────────────────┐
 │                          Player                                  │
 │  Id (UUID PK)                                                    │
-│  ExternalAuthId (unique index, NOT NULL — anonymous users have one) │
+│  ExternalAuthId (unique index, NOT NULL)                          │
 │  DisplayName                                                     │
-│  IsAnonymous (bool)                                              │
 │  CreatedAt (timestamptz)                                         │
 └──────────┬───────────────────────────────┬───────────────────────┘
            │                               │
@@ -420,7 +419,7 @@ Structured log parameters (not string interpolation) from Day 1 so logs are quer
 │  OriginalDiscovererId (FK → Player)                              │
 │  CurrentControllerId (FK → Player, nullable)                     │
 │  CustomName (nullable, moderated)                                │
-│  Status (enum: Active, Suspended, Removed — default Active)      │
+│  Status (enum: Active, Suspended, Removed, Ghost, Relic — default Active) │
 │  ClaimRenewedAt (timestamptz, nullable)                          │
 │  CreatedAt (timestamptz)                                         │
 └──────────┬───────────────────────────────────────────────────────┘
@@ -459,6 +458,7 @@ Structured log parameters (not string interpolation) from Day 1 so logs are quer
 │  TaagId (FK → Taag)                                              │
 │  SortOrder (int, gap-based: 100, 200, 300...)                    │
 │  ClueText (moderated)                                            │
+│  HintText (nullable, moderated)                                  │
 │  GeofenceRadius (int, meters, default 50)                        │
 │  CreatedAt (timestamptz)                                         │
 └──────────────────────────────────────────────────────────────────┘
@@ -504,7 +504,8 @@ Structured log parameters (not string interpolation) from Day 1 so logs are quer
 - **NormalizedContent as unique index** — the primary lookup path. Normalize: lowercase scheme/host, strip trailing slash, sort query params, strip default ports (80/443), strip fragments, normalize URL encoding.
 - **ScanEvent as append-only log** — never updated, never deleted. The audit trail and the analytics source. Partition by month when table exceeds ~10M rows (growth phase).
 - **All timestamps are `timestamptz`** — PostgreSQL stores UTC, EF Core reads/writes DateTimeOffset.
-- **Taags are never hard-deleted.** `Status` enum (Active/Suspended/Removed) controls visibility. Suspended/Removed Taags don't appear in new scan results. Hunts containing a suspended Taag: creator is notified, players mid-hunt get a skip option ("this stop is temporarily unavailable"). FK constraints stay intact, no cascading deletes.
+- **Taags are never hard-deleted.** `Status` enum (Active/Suspended/Removed/Ghost/Relic) controls visibility. Ghost (QR code URL resolves to dead/404 link) and Relic (QR code physically removed but was previously sourced) are defined in the schema for Phase 2 implementation. Suspended/Removed Taags don't appear in new scan results. Hunts containing a suspended Taag: creator is notified, players mid-hunt get a skip option ("this stop is temporarily unavailable"). FK constraints stay intact, no cascading deletes.
+- **HuntStop.HintText** — optional hint text provided by the hunt creator. When present, the system offers hints to players after 3 unsuccessful scan attempts at this stop. When null, no hint is available.
 - **HuntStop unique constraint `(HuntId, TaagId)`** — same Taag cannot appear twice in the same hunt. If a creator wants to revisit a location, they create a new hunt.
 - **Player.DisplayName is intentionally NOT unique** — display names are cosmetic, not identifiers. Leaderboards show DisplayName + first 4 chars of PlayerId as discriminator if duplicates exist. Avoids display name squatting and onboarding friction.
 - **Collection is derived, not stored.** A player's collection = all distinct Taags from their ScanEvents. No separate Collection entity. Query via `ScanEvent(PlayerId, ScannedAt DESC)` index.
@@ -633,8 +634,8 @@ TaagBack/
 ├── app/                        ← expo-router file-based routing
 │   ├── (tabs)/
 │   │   ├── scan.tsx
-│   │   ├── hunts.tsx
 │   │   ├── collection.tsx
+│   │   ├── leaderboard.tsx
 │   │   └── profile.tsx
 │   ├── hunt/[huntId].tsx
 │   ├── hunt/create.tsx
@@ -719,7 +720,7 @@ These rules run in frontend CI, catching violations at build time.
 **ScanRequestDto (client → server):**
 ```
 qrContent: string        — raw encoded data from scanner, max 2048 chars
-location: {               — nullable (omitted for anonymous/COPPA users)
+location: {               — nullable (omitted if location permission not granted)
   latitude: number
   longitude: number
 }
@@ -815,7 +816,7 @@ Entity name first, always plural. Current user uses `'me'`, other players use th
 
 Never show HTTP status codes, raw error messages, or technical details to the user.
 
-**Auth Fallback:** On persistent 401 after token refresh failure → show re-authentication screen ("Please sign in again"). **NEVER** silently create a new anonymous session — that's invisible data loss. User must explicitly choose to continue as new anonymous user or sign in to recover their account.
+**Auth Fallback:** On persistent 401 after token refresh failure → show re-authentication screen ("Please sign in again"). User must sign in to recover their account.
 
 **Offline Scan Queue Drain:** When connectivity resumes, drain at 1 scan every 2 seconds (fixed 2000ms interval via TanStack Query `retryDelay`). This rate stays within the 30/min authenticated rate limit. Show progress: "Syncing 47 of 312 scans..." Queue is manually orchestrated via `useMutation` with `onSettled` triggering next item. Large queues (500+ scans) take ~17 minutes to sync — the batch endpoint (`POST /api/v1/scans/batch`) is the priority post-MVP improvement.
 
@@ -838,11 +839,11 @@ Three steps, in order, before any API call.
 
 Scan-time hunt check: first check active HuntProgress (joined hunts), then lightweight check for "is this Taag stop #1 of any unjoinable published hunt?"
 
-**Permission-Gated Operations:** Custom ASP.NET Core authorization policy `RequirePromotedAccount`. Applied via `[Authorize(Policy = "PromotedAccount")]` on endpoints requiring non-anonymous users (Taag naming, hunt creation). Policy checks `IsAnonymous` claim from Firebase JWT. No scattered `if (user.IsAnonymous)` checks in services.
+**Permission-Gated Operations:** Custom ASP.NET Core authorization policy `RequirePromotedAccount`. Applied via `[Authorize(Policy = "PromotedAccount")]` on endpoints requiring age-verified users (Taag naming, hunt creation). Policy checks age-verification claim from Firebase JWT. No scattered permission checks in services.
 
 **Deep Link Format:** `https://taagback.app/hunt/{huntId}`. Expo universal links handle resolution. Web fallback landing page is post-MVP. Hunt IDs are UUIDv7 — functional, not pretty. Vanity URLs are post-MVP.
 
-**Expiration Notification Service:** A lightweight daily `BackgroundService` with `PeriodicTimer` queries for claims where `ClaimRenewedAt + 30 days < now` and dispatches notifications to previous controllers (FR17) and watchlist subscribers (FR18) via the existing bounded Channel. This service does NOT change claim state — claims remain lazy-evaluated at scan time. No Hangfire/Quartz.
+**Expiration Notification Service:** A lightweight daily `BackgroundService` with `PeriodicTimer` queries for claims where `ClaimRenewedAt + 30 days < now` and dispatches notifications to previous controllers (FR17) and watchlist subscribers (FR18) via the existing bounded Channel. This service does NOT change claim state — claims remain lazy-evaluated at scan time. The daily BackgroundService should also include an approaching-expiration check that sends pre-expiration warning notifications to users whose Taag claims are within 1 day of the 30-day maintenance deadline. No Hangfire/Quartz.
 
 **Taag Suspension Notification Flow:** When admin changes Taag status via `PUT /admin/taags/{id}/status`, `AdminService` queries `HuntStop(TaagId)` index to find all Hunts containing that Taag, then dispatches creator notifications via Channel. Players mid-hunt get a skip option on the suspended stop.
 
@@ -864,8 +865,8 @@ Services within the same bounded context (Scanning ↔ Taags ↔ Hunts) may inje
 Use ASP.NET Core's `WebApplicationFactory` with a test authentication handler. Auth is the one layer that's faked in tests — everything else uses real implementations or configurable doubles.
 
 ```
-TestAuth.AsAnonymous()              → claims with IsAnonymous = true
-TestAuth.AsPromotedUser(playerId)   → claims with IsAnonymous = false
+TestAuth.AsUser(playerId)            → standard authenticated user claims
+TestAuth.AsPromotedUser(playerId)   → claims with age-verification complete
 TestAuth.AsAdmin(playerId)          → future use
 ```
 
@@ -893,7 +894,7 @@ TestAuth.AsAdmin(playerId)          → future use
 - ❌ GPS coordinates in `Information`-level logs
 - ❌ Raw `IConfiguration` injection in services — use `IOptions<T>`
 - ❌ Editing committed migrations — create corrective migrations
-- ❌ Silently creating new anonymous sessions on auth failure
+- ❌ Silently creating new sessions on auth failure
 - ❌ PATCH semantics at MVP — use PUT (full replacement)
 - ❌ Pre-creating empty folder structures without `.gitkeep` — scaffold all folders from project tree with `.gitkeep` placeholders; delete `.gitkeep` when adding first real file
 
@@ -942,7 +943,7 @@ TaagBack.Api/
 │       ├── TaagDetailDto.cs
 │       ├── TaagSummaryDto.cs
 │       ├── TaagNamingRequestDto.cs
-│       └── Taag.cs                       # Entity (includes Status: Active/Suspended/Removed)
+│       └── Taag.cs                       # Entity (includes Status: Active/Suspended/Removed/Ghost/Relic)
 │
 ├── Hunts/
 │   ├── HuntsController.cs
@@ -1022,7 +1023,7 @@ TaagBack.Tests/
 ├── Fixtures/
 │   ├── TestDatabaseFixture.cs            # Testcontainers PostGIS, [SetUpFixture]
 │   ├── TestWebApplicationFactory.cs
-│   ├── TestAuth.cs                       # AsAnonymous(), AsPromotedUser(), AsAdmin()
+│   ├── TestAuth.cs                       # AsUser(), AsPromotedUser(), AsAdmin()
 │   ├── FakeContentModerator.cs           # Configurable pass/reject/timeout
 │   └── TestDataBuilder.cs               # Fluent builder for consistent test entities
 │
@@ -1076,7 +1077,6 @@ TaagBack/
 │   │   │   ├── _layout.tsx
 │   │   │   ├── scan.tsx
 │   │   │   ├── collection.tsx
-│   │   │   ├── hunts.tsx
 │   │   │   ├── leaderboard.tsx
 │   │   │   └── profile.tsx
 │   │   └── hunt/
@@ -1345,6 +1345,35 @@ options.AddPolicy("AdminOnly", policy => policy.RequireClaim("admin", "true"));
 
 Admin policy applied to `GET /admin/reports`, `PUT /admin/reports/{id}`, and `PUT /admin/taags/{id}/status` at MVP. No admin UI — endpoints are callable via Postman/curl for content moderation. Admin claim is set manually in the auth provider — no self-service admin promotion.
 
+### Location Intelligence Subsystem
+
+**Purpose:** Triangulate accurate Taag physical locations from scan image metadata and enrich Taag profiles with contextual data.
+
+**Pipeline:**
+1. User captures image during scan → image uploaded asynchronously (does NOT block scan result flow)
+2. Server extracts EXIF metadata: GPS coordinates, compass bearing, estimated distance from QR code
+3. Triangulation algorithm refines Taag location using data from multiple scans over time
+4. External enrichment pipeline: reverse geocoding, Google Places nearby search, Street View imagery analysis
+5. AI vision analysis on uploaded images: extracts business type, surrounding context, name suggestions, Taag personality graphic
+6. Source images deleted after processing (ephemeral storage — process → extract → delete)
+
+**Architectural Notes:**
+- Image upload is async — scan returns immediately, image processing happens in background
+- Blob storage for ephemeral image holding (process within minutes, then delete)
+- Accuracy tolerances: triangulation should converge to within 10-20m after 3+ scans from different angles
+- External API calls (Google Places, vision analysis) are async background tasks, not in any user-facing request path
+- Location data improves over time as more users scan the same Taag from different positions
+
+### Ephemeral Image Processing Policy
+
+Images uploaded during scan are processed ephemerally — vision analysis extracts contextual data (business type, surroundings, name suggestions, Taag personality graphic), then source images are deleted. Processing must complete quickly as the system needs contextual data to recommend names and generate Taag personality graphics during the naming flow.
+
+### Deferred Deep Linking
+
+Evaluating Branch.io or similar SDK in Sprint 2-3 for deferred deep linking. The concept: when a user encounters a TaagBack-created QR code or shared hunt link but doesn't have the app, the deep link context should survive through app store installation and account creation where feasible. This is best-effort, not guaranteed.
+
+Deep link context surviving through the account creation flow needs to be considered in the auth flow design — the auth abstraction layer should support passing through deep link parameters so that after account creation completes, the user is routed to the intended content (e.g., a specific hunt or Taag).
+
 ## Architecture Validation Results
 
 ### Coherence Validation ✅
@@ -1380,7 +1409,7 @@ The Step 6 project tree supports all architectural decisions. Feature folders (A
 | FR33 | ✅ | Safety/TOU gate — client-side concern |
 | FR34-FR38 | ✅ | IContentModerator, Report entity, admin endpoints, moderation-rejected Problem Details |
 | FR36-FR37 | ✅ | Admin endpoints added: `GET /admin/reports`, `PUT /admin/reports/{id}`, `PUT /admin/taags/{id}/status` |
-| FR39-FR43 | ✅ | Anonymous-first, account promotion via linkWithCredential, age verification, social login |
+| FR39-FR43 | ✅ | Account required on first launch, age verification at registration, social login via Firebase Auth |
 | FR44-FR47 | ✅ | Anti-fraud in cross-cutting concerns, rate limiting per ADR-5 |
 
 **Non-Functional Requirements Coverage (22/22):**

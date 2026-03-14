@@ -41,13 +41,13 @@ Two foundational design principles govern all UX decisions: **"Low Floor, High C
 
 1. **The "Two Realities" Problem** — The same QR code behaves differently with TaagBack vs. a standard camera. Users must understand and remember to use TaagBack as their scanner. The app needs to feel like the natural, default way to interact with any QR code — not an extra step bolted on.
 
-2. **Onboarding Without Friction** — The Wanderer arrives with zero context through serendipity. The first scan must deliver instant delight AND teach core mechanics (claiming, naming, re-scanning) without feeling like a tutorial. "Protect the Magic" means wonder first, education second. Anonymous-first architecture supports this — no account wall before the first dopamine hit.
+2. **Onboarding Without Friction** — The Wanderer arrives with zero context through serendipity. Account creation happens on first app launch but must be designed as a signature UX moment — a delightful "passport issuance" that sets the tone for the entire experience, not a barrier. The first scan must then deliver instant delight AND teach core mechanics (claiming, naming, re-scanning) without feeling like a tutorial. "Protect the Magic" means wonder first, education second.
 
 3. **Dual-Mode Hunt Creation** — The Creator needs two creation modes (field and couch/map) that feel like one seamless experience. She might start a hunt while walking, then finish it from home. Draft state must persist invisibly and the transition between modes must be frictionless.
 
 4. **Re-scan as Joy, Not Chore** — Monthly maintenance could feel like a tax. The UX must frame re-scanning as territory defense — a game within the game — not a nagging reminder. The retention hook is introduced at peak emotional investment (right after naming YOUR Taag), but maintaining that framing over months requires careful notification and celebration design.
 
-5. **COPPA + Age Gate Choreography** — Under-13 users need Verifiable Parental Consent before GPS/account features, but the age gate can't be the first thing a curious kid encounters. Anonymous-first scanning (no personal data collected) provides a legal grace period, but the promotion flow from anonymous to authenticated must be carefully choreographed to maintain delight while meeting compliance.
+5. **COPPA + Age Gate Choreography** — Under-13 users need Verifiable Parental Consent before GPS/account features. The age gate is integrated into the account creation flow on first launch — woven naturally into the "passport issuance" ceremony so it feels like part of the experience, not a compliance checkpoint. The choreography must maintain delight while meeting legal requirements.
 
 6. **No Progress Counter as Tension Design** — The deliberate omission of hunt progress indicators is a bold, cinematic UX choice. Uncertainty IS the excitement. But this counter-intuitive pattern must be executed carefully so players feel suspense, not confusion or frustration.
 
@@ -95,21 +95,23 @@ The app operates in **three distinct user modes**, each with different emotional
 
 ### Critical Success Moments
 
-1. **The Pioneer Celebration (Day 1)** — First unclaimed Taag scan. Confetti, fanfare, naming ceremony. If this doesn't make the user feel like they just discovered treasure, the Wanderer is lost forever. Designed to be screenshot-worthy — every share is organic marketing.
+1. **The Passport Issuance (Day 1)** — Account creation on first app launch. This is TaagBack's first impression and must feel like joining a secret society or getting your passport stamped for a hidden world — not filling out a sign-up form. The "passport" metaphor from the product brief lives here: your account IS your passport to the invisible layer. Age gate is woven naturally into the ceremony. Design should carry the same emotional investment as the pioneer celebration — this is where TaagBack's personality and design language make their debut. If registration feels like a chore, the Wanderer never reaches the first scan. If it feels like an initiation, every scan that follows has emotional context.
+
+2. **The Pioneer Celebration (Day 1)** — First unclaimed Taag scan. Confetti, fanfare, naming ceremony. If this doesn't make the user feel like they just discovered treasure, the Wanderer is lost forever. Designed to be screenshot-worthy — every share is organic marketing.
 
 2. **The "Darn!" → Watchlist Flow (Day 1)** — Scanning a claimed Taag, feeling the theatrical loss, then being offered the watchlist. Converts disappointment into anticipation. The "darn!" moment must play well as a social/spectator moment — designed for the audience of peers watching over the scanner's shoulder.
 
-3. **The Hunt Invitation Discovery (Day 1)** — Scanning a Taag and seeing "This is part of an active hunt — want to join?" The moment hunts find players organically through the real world. If this transition feels natural and exciting, the flywheel spins.
+4. **The Hunt Invitation Discovery (Day 1)** — Scanning a Taag and seeing "This is part of an active hunt — want to join?" The moment hunts find players organically through the real world. If this transition feels natural and exciting, the flywheel spins.
 
-4. **The Blackout Crescendo (Day 1)** — Hunt completion. Screen goes black. Dramatic pause. Celebratory fanfare fades in and CRESCENDOS with confetti, music, fireworks. Then the creator's personal completion message. TaagBack's "movie moment." If it lands, players become creators.
+5. **The Blackout Crescendo (Day 1)** — Hunt completion. Screen goes black. Dramatic pause. Celebratory fanfare fades in and CRESCENDOS with confetti, music, fireworks. Then the creator's personal completion message. TaagBack's "movie moment." If it lands, players become creators.
 
-5. **First Hunt Publish (Day 1)** — Creator hits "Publish" and receives a shareable deep link. If creation feels empowering and simple, players graduate into creators and the flywheel accelerates.
+6. **First Hunt Publish (Day 1)** — Creator hits "Publish" and receives a shareable deep link. If creation feels empowering and simple, players graduate into creators and the flywheel accelerates.
 
-6. **The Hidden Layer Reveal (Fast Follow)** — After the first pioneer celebration, a brief atmospheric glimpse of the local ecosystem (nearby Taags, active hunts, player activity) that transforms "I scanned a code" into "I just entered a hidden world." Bridges the gap between individual scan and platform awareness.
+7. **The Hidden Layer Reveal (Fast Follow)** — After the first pioneer celebration, a brief atmospheric glimpse of the local ecosystem (nearby Taags, active hunts, player activity) that transforms "I scanned a code" into "I just entered a hidden world." Bridges the gap between individual scan and platform awareness.
 
-7. **The Creator On-Ramp (Post-MVP)** — Post-hunt-completion prompt: "That was [Creator]'s story. Want to tell yours?" Pre-populated route suggestions from the player's own sourced Taags lower the barrier from blank page to "customize this starter." Trigger: hunt completion emotional peak. Purpose: player-to-creator conversion.
+8. **The Creator On-Ramp (Post-MVP)** — Post-hunt-completion prompt: "That was [Creator]'s story. Want to tell yours?" Pre-populated route suggestions from the player's own sourced Taags lower the barrier from blank page to "customize this starter." Trigger: hunt completion emotional peak. Purpose: player-to-creator conversion.
 
-8. **The Creator Payoff Notification (Fast Follow)** — When a player completes your hunt, the creator receives an emotionally designed notification — not just a stat increment. "3 people completed Downtown History Walk today." Trigger: ongoing engagement. Purpose: fuel the creation flywheel by making creators FEEL their impact.
+9. **The Creator Payoff Notification (Fast Follow)** — When a player completes your hunt, the creator receives an emotionally designed notification — not just a stat increment. "3 people completed Downtown History Walk today." Trigger: ongoing engagement. Purpose: fuel the creation flywheel by making creators FEEL their impact.
 
 ### Experience Principles
 
@@ -195,7 +197,8 @@ The emotional tone is closer to a **magic trick** than a game. The feeling that 
 
 | Stage | Emotion | Design Driver |
 |-------|---------|---------------|
-| App opens, camera ready | Curiosity — "What will I find?" | Clean scanner, no clutter, sense of possibility |
+| App opens, passport issuance | Initiation — "I'm joining something secret" | Registration as ceremony, age gate woven in, passport metaphor |
+| Camera ready | Curiosity — "What will I find?" | Clean scanner, no clutter, sense of possibility |
 | First scan — pioneer! | Euphoria — "I FOUND something!" | Confetti, fanfare, naming ceremony. Peak dopamine. |
 | Names her first Taag | Pride + Ownership — "This is MINE" | Personal naming moment, permanent discoverer credit |
 | Re-scan explained | Protective instinct — "I need to come back" | Introduced at peak investment, framed as territory defense |
@@ -244,7 +247,7 @@ The emotional tone is closer to a **magic trick** than a game. The feeling that 
 |---------|-------------|------------|
 | **Punished** | Losing a Taag claim feels like punishment | Frame as "the game continues" not "you failed." Three-tier attribution preserves discoverer credit forever. |
 | **Spammed** | Too many notifications at scale | Maintenance batching (Post-MVP). Conservative notification defaults. Every type independently opt-outable. |
-| **Lost/Confused** | Hunt clue is unsolvable, or app state is unclear | Hints available per stop. "Failures Are Friendly" principle. No ambiguous UI states. |
+| **Lost/Confused** | Hunt clue is unsolvable, or app state is unclear | Hints available per stop if provided by the creator (shown after 3 unsuccessful scan attempts). "Failures Are Friendly" principle. No ambiguous UI states. |
 | **Surveilled** | Location tracking feels creepy | Explicit opt-in. Minimum precision GPS. Never show exact user locations to other users. |
 | **Bored** | Scan fatigue after local codes exhausted | Territory Mode (Post-MVP). Leaderboard competition and hunt play carry engagement when discovery plateaus. |
 | **Exploited** | Monetization feels extractive | "Protect the Magic" test on all monetization. Core loops never paywalled. Cosmetic-only marketplace. |
@@ -293,11 +296,11 @@ The creator's completion message is presented as a personal letter — handwritt
 
 **Deferred Deep Linking:**
 
-Hunt deep links must survive the app install process. If a user taps a shared hunt link, installs TaagBack, and opens the app for the first time, the hunt invitation must be waiting. Broken deferred deep links kill the primary distribution channel for hunts. Technical requirement: expo-linking with deferred deep link support.
+Hunt deep links should survive the app install process where feasible. Ideally, if a user taps a shared hunt link, installs TaagBack, and opens the app for the first time, the hunt invitation is waiting. Deferred deep linking is desirable but not guaranteed across all platforms and install paths — best-effort implementation. Technical requirement: expo-linking with deferred deep link support.
 
 **Hunt Recovery UX (Day 1):**
 
-- **Broken stop detection:** If a scan at a hunt stop fails 3 times, offer: "Having trouble? [Report this stop] [Try the hint] [Skip this stop]." Skip advances to the next clue.
+- **Broken stop detection:** If a scan at a hunt stop fails 3 times, offer: "Having trouble? [Report this stop] [Try the hint]." Hints are only shown if the hunt creator provided one for that stop.
 - **Progress preservation:** Hunt progress auto-saves. Quitting and returning resumes from the last completed stop, not stop 1. Real-world time investment MUST be respected.
 - **Partial completion credit:** Abandoned hunts show in history: "Campus Cryptic — 5 stops completed (incomplete)." Not a celebration, but an acknowledgment.
 - **Dual geofencing:** Relaxed geofence for hunt stop verification (QR token match is primary proof of presence). Strict geofence for competitive claiming and Taag sourcing.
@@ -313,9 +316,9 @@ Hunt detail screen shows: "X players started | Y completed | Created [date]." Th
 
 ### Celebration Design
 
-**Celebration Progression (Variety Injection):**
+**Celebration Progression (Variety Injection) — Phase 2:**
 
-Replace celebration dimming with variety to prevent scan fatigue spiral:
+Replace celebration dimming with variety to prevent scan fatigue spiral. Not included in MVP — added in Phase 2 after core celebration mechanics are established:
 
 - **Scans 1-5:** Full pioneer fanfare — dramatic, signature, screenshot-worthy
 - **Scans 6-20:** Varied micro-celebrations — rotating different animations and sounds, each with personality. A rotation, not a dimming.
@@ -366,9 +369,9 @@ First-encounter moments to validate:
 
 ### Hunt Pacing Design
 
-**Creator-Designated Highlight Stops:**
+**Creator-Designated Highlight Stops (Phase 2):**
 
-Creators can mark 1-2 stops per hunt as "highlight stops" with enhanced celebrations. Default stops get a quick reward animation; highlight stops get a bigger moment. This gives creators pacing control to prevent the sagging middle of longer hunts. Highlight stops function as dramatic beats — the creator is a film director deciding where the tension peaks.
+Creators can mark 1-2 stops per hunt as "highlight stops" with enhanced celebrations. Default stops get a quick reward animation; highlight stops get a bigger moment. This gives creators pacing control to prevent the sagging middle of longer hunts. Highlight stops function as dramatic beats — the creator is a film director deciding where the tension peaks. Not included in MVP — added in Phase 2 after core hunt mechanics are validated.
 
 ## UX Pattern Analysis & Inspiration
 
@@ -401,7 +404,7 @@ Creators can mark 1-2 stops per hunt as "highlight stops" with enhanced celebrat
 | 3 | Physical-World UX | Pokemon GO + Strava + Uber | Discovery (Pokemon GO) + territory ownership (Strava) + "you are HERE" grounding (Uber). |
 | 4 | Collection / Progression | Pokemon GO + Strava | Category silhouettes, completion drive, diary-of-places-been. Collection as emotional gravity well. |
 | 5 | Creator Tool UX | TikTok | Template-first, in-context editing, progressive complexity. Never a blank page. |
-| 6 | Frictionless Onboarding | TikTok + Uber | Open → camera → scan → result. Zero decisions, zero tutorials. |
+| 6 | Delightful Onboarding | TikTok + Uber | Open → passport issuance → camera → scan → result. Registration as ceremony, then zero friction. |
 | 7 | Map / Spatial | Strava + Uber + Airbnb | Collection map (biography) + builder map (direct manipulation) + info-dense pins. |
 | 8 | Notification Design | BeReal + Uber | Notifications as story openers, not reminders. Perfect timing, emotional copy. |
 | 9 | Anti-Polish Aesthetic | BeReal + Cash App | Constraint system: textured, handmade, lo-fi palette, monospace type. |
@@ -414,7 +417,7 @@ Pokemon GO's physical-world collection drive + Strava's territorial ownership + 
 
 | Anti-Pattern | Source | Why It Fails for TaagBack |
 |---|---|---|
-| Tutorial onboarding | Pokemon GO | Kills the magic. "Reveal, Don't Explain" means NO tutorial. First scan IS the onboarding. |
+| Tutorial onboarding | Pokemon GO | Kills the magic. "Reveal, Don't Explain" means NO tutorial. The passport issuance sets the tone, then first scan IS the onboarding. |
 | Infinite scroll | TikTok | TaagBack is physical-world, not infinite-content. No screen should encourage endless passive scrolling. |
 | Aggressive notifications | Duolingo | Notification numbness is a documented risk. Conservative defaults, independent opt-outs. |
 | Premium paywall on core loops | Strava | "Protect the Magic" means core game is always free. Monetization is cosmetic/creator-tools/B2B. |
@@ -442,7 +445,7 @@ Pokemon GO's physical-world collection drive + Strava's territorial ownership + 
 - Treasure map aesthetic (Airbnb photography) → Collection and map screens have illustrated, hand-drawn quality
 
 **What to Avoid:**
-- Tutorial onboarding — Never. First scan IS the tutorial.
+- Tutorial onboarding — Never. Passport issuance sets the tone, then first scan IS the tutorial.
 - Notification harassment — Conservative defaults. "Fewer is better."
 - Core feature paywall — Core loops always free.
 - Corporate polish — Gen-Z vintage aesthetic: handmade, lo-fi, underground.
@@ -704,7 +707,7 @@ TaagBack's defining experience is a three-beat sequence: (1) Scan any real-world
 - **Claim-and-defend** — Monthly re-scan to maintain ownership. Borrowed from territory games but applied to QR codes. Needs clear onboarding.
 - **Passive hunt discovery** — Scanning a random QR code might pull you into a hunt you didn't know existed. This "the game finds you" mechanic has no direct precedent.
 
-**Teaching strategy:** The first scan IS the tutorial. Pioneer celebration teaches: codes have hidden identities. The naming ceremony teaches: you own this now. The re-scan reminder teaches: come back to keep it. No separate onboarding flow — the core interaction *is* the onboarding.
+**Teaching strategy:** The passport issuance ceremony teaches: you've entered a hidden world. The first scan IS the tutorial. Pioneer celebration teaches: codes have hidden identities. The naming ceremony teaches: you own this now. The re-scan reminder teaches: come back to keep it. No separate onboarding flow — the passport issuance and core interaction *are* the onboarding.
 
 ### 7.5 Experience Mechanics
 
@@ -757,14 +760,15 @@ TaagBack's defining experience is a three-beat sequence: (1) Scan any real-world
 **Server Error During Reveal:**
 - The worst possible moment for a technical failure. Optimistic UI ensures the user sees scanning animation and gets a queued result rather than an error screen at peak emotional investment.
 
-**Near-Simultaneous Pioneer Scans (Photo Finish):**
+**Near-Simultaneous Pioneer Scans (Photo Finish — Phase 2):**
 - Server-side: first request to complete processing wins. Race condition handled by the API.
 - Winner: full pioneer celebration
-- Runner-up (within ~30 seconds): "Photo Finish" special moment — "You JUST missed being the pioneer — [winner] beat you by seconds!" A story, not a loss.
+- Runner-up (within ~30 seconds): "Photo Finish" special moment — "You JUST missed being the pioneer — [winner] beat you by seconds!" A story, not a loss. The Photo Finish UX treatment is Phase 2 — MVP handles the race condition server-side but runner-up sees a standard already-claimed result.
 
-**Travel-Aware Claiming:**
+**Travel-Aware Claiming (Phase 3):**
 - If location suggests user is far from their usual area, surface a gentle note at claim time: "Claiming this Taag means coming back monthly to keep it. Want to add it to your collection without claiming?"
 - Collection != Claim. Informed choice preserves "consequences are content."
+- Not included in MVP — added in Phase 3 after sufficient location data patterns are established.
 
 ### 7.7 Taag Lifecycle & Special States
 
@@ -809,16 +813,15 @@ The app detects local density and adjusts nudges, messaging, and feature emphasi
 - Ownership as reward, maintenance as privilege — never obligation.
 - Notification framing: "Your Taag is waiting for you" — not "Your claim expires in 3 days."
 
-**Grace Window:**
-- When a claim expires, a 48-72 hour contestable period begins where the previous holder gets priority to re-claim before it opens to everyone.
-- The holder must still physically show up — but they get first dibs.
-- Preserves "consequences are content" while softening the cliff edge.
-- Claim expiration notification fires BEFORE the deadline, not after.
+**Hard 30-Day Cutoff:**
+- Claims expire after exactly 30 days with no grace period. Pre-expiration warning fires at ~29 days (1 day before deadline), giving the holder one last chance to re-scan.
+- If the holder doesn't re-scan before the 30-day mark, the Taag immediately becomes contestable and open to all.
+- Preserves "consequences are content" — the stakes are real, and that's what makes the mechanic meaningful.
 
-**Anonymous-First Core Experience:**
-- Beat 1 (Scan) and Beat 2 (Discover) work fully without an account. The magic lens works for anyone.
-- Beat 3 (Claim/Name) requires account creation. This is the account gate — positioned at maximum emotional investment.
-- Aligns with COPPA considerations: under-13 users can experience the magic without an account.
+**Account-First Core Experience:**
+- Account creation happens on first app launch as a signature UX moment — a delightful "passport issuance" ceremony, not a form.
+- Age gate is naturally integrated into the account creation flow on first launch.
+- With an account already created, the full three-beat scan experience (Scan → Discover → Claim/Name) flows uninterrupted from the very first scan.
 
 ---
 
@@ -867,7 +870,7 @@ If a user opens the app and their screen is dominated by Ghost Purple, they've b
 | Semantic | Maps To | Context |
 |----------|---------|---------|
 | Success | Hunt Green | Completed actions, successful scans, claim maintained |
-| Warning | Alert Amber | Expiring claims, grace windows, soft alerts |
+| Warning | Alert Amber | Expiring claims, pre-expiration warnings, soft alerts |
 | Error | Rival Magenta (desaturated) | Failed scans, connection errors, content moderation |
 | Info | Claim Cyan (dimmed) | Informational tooltips, onboarding hints |
 
@@ -1252,6 +1255,7 @@ Sunlight adaptation, remaining 3 sound bindings, VHS texture overlays, badge pee
 | Moment | Mode | Volume | Emotional Arc | Transition |
 |--------|------|:---:|---|---|
 | Open app | Experience | On | Anticipation | — |
+| Passport Issuance (registration) | Celebration | On-Max | Initiation, belonging — "I'm joining something" | Smooth, deliberate |
 | Camera permission | Experience | On | Brief friction | Smooth |
 | Camera active | Experience | On | Calm, ready | Smooth |
 | Code detected | Experience | On | Excitement building | Frame highlight + haptic |
@@ -1275,7 +1279,8 @@ Visual journey validated end-to-end. All mode transitions are either smooth grad
 
 ```mermaid
 flowchart TD
-    A[App Launch] --> B{Camera Permission?}
+    A[App Launch] --> AA[Registration: Passport Issuance Ceremony<br/>Age gate integrated naturally<br/>Celebration mode - signature UX moment]
+    AA --> B{Camera Permission?}
     B -->|Already Granted| D[Camera Active - Experience Mode]
     B -->|Not Yet Asked| C["Activate Your Magic Lens" screen]
     C --> B2{User Grants?}
@@ -1300,10 +1305,7 @@ flowchart TD
     L -->|Yes - Unclaimed| O[Discovery Celebration<br/>Less intense than Pioneer<br/>but still a win]
 
     M --> P[Naming Ceremony<br/>Deliberate pacing<br/>"This Taag is waiting for its name"]
-    P --> Q{Account exists?}
-    Q -->|Yes| R[Name input + AI suggestions<br/>Tap to select or custom]
-    Q -->|No| S[Account Gate<br/>"Create account to claim"<br/>Peak emotional investment]
-    S --> S2[Quick signup flow] --> R
+    P --> R[Name input + AI suggestions<br/>Tap to select or custom]
     R --> T[Name engraved on TaagCard<br/>THUNK stamp animation<br/>Emotional apex]
     T --> U[Re-scan explanation<br/>"Come back monthly to keep it"<br/>Introduced as POWER not chore]
     U --> V[Emotional Airlock<br/>"Your Taag is born" summary<br/>Experience mode, Volume On]
@@ -1325,8 +1327,9 @@ flowchart TD
 ```
 
 **Key flow decisions:**
+- Account creation happens immediately on first launch as a signature "passport issuance" ceremony — age gate integrated naturally
 - Camera + location permissions are sequential, just-in-time, not stacked at launch
-- Account gate appears at maximum emotional investment (during naming), not before
+- With account already created, the full scan-to-claim flow is uninterrupted from the first scan
 - Pioneer and Already-Claimed are equally designed paths, not main vs. fallback
 - Naming ceremony has its own distinct pacing separate from the celebration
 - Emotional airlock always follows celebration before returning to utility screens
@@ -1442,14 +1445,13 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[System: Dave's claim expires<br/>30 days since last re-scan] --> B[Grace window begins<br/>48-72 hours]
+    A[System: Dave's claim approaching expiry<br/>~29 days since last re-scan] --> B[Pre-expiration warning fires<br/>1 day before deadline]
 
-    B --> C[Push notification to Dave<br/>"Your Taag 'Lucky's Corner' needs you!<br/>You have 48 hours to re-scan"]
-    B --> D[Taag status: GRACE PERIOD<br/>Dave has priority re-claim]
+    B --> C[Push notification to Dave<br/>"Your Taag 'Lucky's Corner' needs you!<br/>Re-scan before tomorrow to keep it"]
 
-    C --> E{Dave re-scans in time?}
+    C --> E{Dave re-scans before 30-day mark?}
     E -->|Yes| F[Claim maintained<br/>"Welcome back! Claim renewed"<br/>Re-scan chirp + light haptic]
-    E -->|No - Grace expires| G[Taag becomes CONTESTABLE<br/>Open to all]
+    E -->|No - 30 days reached| G[Taag becomes CONTESTABLE<br/>Immediately open to all]
 
     G --> H[Push notification to watchlisters<br/>"A Taag on your watchlist is<br/>now up for grabs: Lucky's Corner"]
     G --> I[Push notification to Dave<br/>"Your Taag 'Lucky's Corner'<br/>has been released"]
@@ -1469,9 +1471,9 @@ flowchart TD
 ```
 
 **Key flow decisions:**
-- Grace window (48-72hr) fires BEFORE full expiration — Dave gets a chance
-- Dave's notification fires at grace START, not at expiration
-- Watchlist notifications fire at CONTESTABLE state (after grace), not during grace
+- Hard 30-day cutoff with no grace period — pre-expiration warning fires at ~29 days (1 day before deadline)
+- Dave gets one clear warning before the hard deadline
+- Watchlist notifications fire immediately when the Taag becomes contestable at the 30-day mark
 - Re-claim by new player is a distinct celebration variant — rivalry energy, not pure pioneer joy
 - Three-tier attribution ensures Dave's Pioneer credit is never lost
 - The watchlist-back option creates an ongoing narrative loop between players
@@ -1498,11 +1500,11 @@ flowchart TD
     L -->|Yes| M["While you're out, name<br/>is 0.3 miles away"<br/>Opportunistic nudge]
     L -->|No| N[Return to normal flow]
 
-    H -->|No - time passes| O{Grace period triggered?}
-    O -->|Within 48-72hr| P[Push notification<br/>Alert Amber clock chime<br/>"Last chance for name"]
-    O -->|Expired| Q[Claim lost<br/>Contestable flow begins<br/>See Journey 10.4]
+    H -->|No - time passes| O{Day 29 reached?}
+    O -->|Yes - pre-expiration warning| P[Push notification<br/>Alert Amber clock chime<br/>"Last chance for name — re-scan by tomorrow"]
+    O -->|Day 30 - hard cutoff| Q[Claim lost<br/>Contestable flow begins<br/>See Journey 10.4]
 
-    P --> R{User re-scans?}
+    P --> R{User re-scans before Day 30?}
     R -->|Yes| J
     R -->|No| Q
 
@@ -1517,7 +1519,7 @@ flowchart TD
 - 7-day advance warning gives users time to plan (not a last-minute panic)
 - Re-scan confirmation is warm and efficient — not a celebration, a satisfied acknowledgment
 - Opportunistic "while you're out" nudge for nearby expiring claims — turns maintenance into a mini-adventure
-- Push notification only fires at grace period — not before (too nagging)
+- Push notification fires at Day 29 (pre-expiration warning) — one clear chance before the hard 30-day cutoff
 
 ### 10.6 Journey Patterns
 
@@ -1525,13 +1527,13 @@ Across all five flows, these patterns repeat:
 
 **Navigation Patterns:**
 - **Camera as home base** — the app always returns to camera after completing a flow. Scan-first design.
-- **Just-in-time permissions** — camera, location, account creation all requested at the moment they're needed, at peak motivation.
+- **Deliberate onboarding, just-in-time permissions** — account creation is a signature moment on first launch; camera and location permissions are requested just-in-time at the moment they're needed, at peak motivation.
 - **Organic discovery over catalog browsing** — hunts are found through scans, not through a list. The list exists but isn't the primary discovery path.
 
 **Decision Patterns:**
 - **Binary choices at emotional peaks** — "Claim?" "Join hunt?" "Watch this Taag?" Simple yes/no at moments of high engagement.
 - **Deferred complexity** — details are always available but never required. Taag stats, claimer history, hunt metadata are there if you want them, not blocking progress.
-- **Escape without loss** — every flow can be exited without losing the scan. Declining a hunt still processes the Taag. Skipping naming still claims. Nothing is wasted.
+- **Escape without loss** — every flow can be exited without losing the scan. Declining a hunt still processes the Taag. Nothing is wasted.
 
 **Feedback Patterns:**
 - **Celebration → Airlock → Utility gradient** — peak moments always wind down gradually through the emotional airlock.
@@ -1540,10 +1542,10 @@ Across all five flows, these patterns repeat:
 
 ### 10.7 Flow Optimization Principles
 
-1. **Steps to first value: 3** — Launch → Camera → Scan → Pioneer. Three taps from install to dopamine.
+1. **Steps to first value: 4** — Launch → Passport Issuance (account creation) → Camera → Scan → Pioneer. Four steps from install to dopamine, but the passport issuance IS a dopamine moment itself.
 2. **Physical effort = proportional acknowledgment** — traveled somewhere? The app notices. Scanned the wrong code? Still a Taag. Came back to re-scan? Warm welcome.
 3. **Creation flows should feel like play** — Sarah's hunt building flow mirrors the player experience. She walks the route, scans the codes, writes the clues in-field. Creation IS exploration.
-4. **Maintenance should feel optional until it isn't** — no maintenance interruptions during active play. Amber indicators are ambient, not blocking. Push notifications only at grace period.
+4. **Maintenance should feel optional until it isn't** — no maintenance interruptions during active play. Amber indicators are ambient, not blocking. Push notification fires at Day 29 as pre-expiration warning.
 5. **Every dead end has a redirect** — camera denied → Settings path. Wrong hunt stop → still a Taag scan. Claim expired → watchlist-back option. No flow terminates without a next step.
 
 ---
@@ -1566,7 +1568,7 @@ Standard UI components styled with TaagBack design tokens. No special behavioral
 | **TextInput** | Taag naming, clue writing, search | bg-tertiary, text-primary. Terminal corners for utility, Sticker for personal. |
 | **ListItem** | Hunt list, leaderboard rows, Taag lists | Consistent inner padding, divider treatment, tap feedback. |
 | **Badge/Chip** | Category tags, status indicators, stat labels | Die-cut sticker shapes per visual design foundation. |
-| **Modal/BottomSheet** | Confirmations, watchlist prompt, account gate | Slides from bottom, bg-secondary, contextual spacing. |
+| **Modal/BottomSheet** | Confirmations, watchlist prompt, quick actions | Slides from bottom, bg-secondary, contextual spacing. |
 | **ProgressBar** | Hunt progression, profile level | Hunt Green fill, Terminal corners. |
 | **TabBar / Navigation** | Bottom nav, section switching | Phosphor Bold icons, accent-color active state. |
 | **Avatar** | Player profiles, leaderboard entries | Sticker corners (personal data), small circular. |
@@ -1598,7 +1600,7 @@ Brand-defining components with custom behavior, animation, and state management.
 | Unclaimed | Ghost Purple outline, "?" watermark interior | Sticker (invitation) | 2 |
 | Hunt-stamp | Hunt completion stamp with template graphic, completion date, creator attribution | Sticker | 2 |
 
-**Decay Meter:** Thin bar/ring on claimed-by-other Taags. Fills with Claim Cyan on re-scan day, transitions toward Alert Amber over 30 days. At grace period, pulses. Visual FEELING of freshness vs. staleness — not a countdown timer.
+**Decay Meter:** Thin bar/ring on claimed-by-other Taags. Fills with Claim Cyan on re-scan day, transitions toward Alert Amber over 30 days. Near expiration, pulses. Visual FEELING of freshness vs. staleness — not a countdown timer.
 
 **Card Flip (Phase 2):** Detail variant has front (visual stamp — name, state, accent) and back (data card — encoded URL, scan count, first scanned date, location). 3D rotation via Reanimated. Front = Collection world (Sticker corners). Back = Game world (Terminal corners).
 
@@ -1681,13 +1683,13 @@ Brand-defining components with custom behavior, animation, and state management.
 | State | Visual | Interaction |
 |-------|--------|-------------|
 | Locked | Placeholder text ("Clue locked") + decorative "?" characters. Real clue text NOT in DOM (prevents view-source cheating and screen reader spoiling). Ghost Purple tint. | Not tappable, teasing |
-| Active | Full readable. bg-tertiary minimum, 16px text, space-lg padding, generous line height. | Readable, hint available, skip timer if enabled |
+| Active | Full readable. bg-tertiary minimum, 16px text, space-lg padding, generous line height. | Readable, hint available if creator provided one (shown after 3 unsuccessful scan attempts) |
 | Solved | Stamped/checked. Hunt Green overlay, slightly faded. | Reviewable, not primary |
 | Peek | Minimized single-line bar at screen top showing clue title only. Camera active underneath. | Tap to expand to Active. Swipe down from Active to collapse. |
 
 **Max Height:** ~60% of viewport in Active state. Longer clues get subtle scroll indicator. Short clues center vertically.
 
-**Skip Mechanic:** When creator enables skipping, Active state shows a skip timer after configurable delay (default: 10 minutes). "Skip this stop" option appears. Skipped stops count as incomplete.
+**Hint Mechanic:** Hints are only displayed if the hunt creator provided a hint for that stop. After 3 unsuccessful scan attempts at a stop, the hint button becomes available. If no hint was provided by the creator, no hint button is shown — the UI stays clean rather than showing a disabled or empty hint option.
 
 **Accessibility:** Minimum 16px text, bg-tertiary contrast, 1.5 line height. Works at 1.5x system font scale. Active clue announced to screen reader on reveal. Peek state announces title text.
 
@@ -1748,7 +1750,7 @@ These are documented patterns built from foundation components, not custom libra
 | Pattern | Built From | Used In |
 |---------|-----------|---------|
 | **Watchlist Prompt** | BottomSheet + Button + TaagCardBase content | Scan result (claimed-by-other) |
-| **Account Gate** | Modal + TextInput + Button + social login buttons | First claim/naming ceremony |
+| **Passport Issuance (Account Creation)** | Full-screen Experience + TextInput + Button + social login buttons | First app launch |
 | **Clue Editor** | TextInput (title 30 char + body 280 char) + hint toggle + ClueCard preview | Hunt builder screen |
 | **Maintenance Indicator** | Animated Badge (breathing Alert Amber) overlaid on TaagCardBase | Collection view, notifications |
 | **Creator Dashboard Funnel** | ProgressBar segments + ListItems with per-stop attempt counts | Hunt management screen |
@@ -1786,10 +1788,10 @@ These are documented patterns built from foundation components, not custom libra
 - MapView wrapper + TaagPin sub-component (PIN_CONFIG with size dimension)
 - Server-side clustering integration
 - RevealAnimation utility
-- Watchlist Prompt pattern, Account Gate pattern, Maintenance Indicator pattern
+- Watchlist Prompt pattern, Passport Issuance pattern, Maintenance Indicator pattern
 - FeedbackManager full (3 Day 1 sounds: THUNK, confirmation chirp, adventure fanfare)
 - Avatar, NotificationBanner
-- Skip mechanic (creator-configurable, delay-gated)
+- Conditional hint display (shown after 3 failed scan attempts, only if creator provided hint)
 - **Hard gate: Phase 2 feature-complete and tested before ANY Phase 3 work.**
 
 **Phase 3 — Celebration Components (~1-2 weeks)**
@@ -1877,7 +1879,7 @@ Note: Progressive messages describe app state, not user ability. No "hold steady
 
 **Optimistic UI Rule:** If API call is in-flight, show scanning animation and detection confirmation. If API fails, cache locally and queue. "Your scan is saved — we'll reveal this Taag when you're back online." NEVER lose a scan.
 
-**Photo Finish (Accidental Near-Simultaneous Pioneer):** Winner gets full Pioneer celebration. Runner-up (within ~30 seconds): "You JUST missed being the pioneer — [winner] beat you by seconds!" A story, not an error.
+**Photo Finish (Accidental Near-Simultaneous Pioneer — Phase 2):** Winner gets full Pioneer celebration. Runner-up (within ~30 seconds): "Photo Finish" special UX is Phase 2. MVP: runner-up sees standard already-claimed result. Phase 2: "You JUST missed being the pioneer — [winner] beat you by seconds!" A story, not an error.
 
 **"Claimed!" (Intentional Re-claim Race):** Different framing from Photo Finish — both users KNEW they were racing (watchlist alert). Winner: "You beat [n] others to claim this Taag!" Runner-up (within ~60 seconds): "Just missed it! [Winner] claimed it [n] seconds before you." Immediate watchlist prompt. Competitive framing, not accidental.
 
@@ -2024,7 +2026,7 @@ Simple yes/no at high engagement moments. Never more than two options at an emot
 |------|-----------|-----|---------|
 | **FullScreenTakeover** | Custom wrapper | Celebrations, scan transitions | Explicit Continue button only |
 | **BottomSheet** | Foundation component | Watchlist prompt, hunt invitation, safety gate, quick actions | Swipe down or tap outside |
-| **Full-Screen Modal** | Foundation component | Account gate (conversion-critical, content-heavy) | Explicit close/skip buttons |
+| **Full-Screen Modal** | Foundation component | Passport issuance on first launch, other content-heavy flows | Explicit close/skip buttons |
 | **Toast/Banner** | Foundation component | Confirmations, status updates, offline indicator | Auto-dismiss or swipe |
 
 **BottomSheet Rules:**
@@ -2034,10 +2036,12 @@ Simple yes/no at high engagement moments. Never more than two options at an emot
 - Never stacks: one BottomSheet at a time. New one dismisses current first.
 - Note: Toast/Banner can appear while BottomSheet is open (top vs. bottom, different types).
 
-**Account Gate (Full-Screen Modal):**
-- Appears during naming ceremony (peak investment). Full-screen modal, not BottomSheet — content-heavy (headline + social login + email + skip), conversion-critical moment.
-- "Just browsing" Ghost button clearly visible — respects user autonomy.
-- After creation: seamless return to naming ceremony.
+**Account Creation (Passport Issuance — First Launch):**
+- Appears on first app launch as a signature UX moment — the "passport issuance" ceremony.
+- Full-screen experience, not a modal overlay. Designed as an initiation into the hidden world, not a sign-up form.
+- Age gate woven naturally into the flow.
+- Social login + email options presented with TaagBack's personality and design language.
+- After creation: seamless transition to camera permission and first scan.
 
 **Safety/TOU Gate (BottomSheet):**
 - Before first hunt participation. First time: checkbox + confirm. Subsequent: reminder only.
@@ -2066,7 +2070,7 @@ Simple yes/no at high engagement moments. Never more than two options at an emot
 - Auto-save: drafts persist if creator leaves mid-creation.
 
 **Hunt Metadata (Creator Form):**
-- Title (50 chars), description (200 chars), skippable toggle, category (optional preset list).
+- Title (50 chars), description (200 chars), category (optional preset list).
 - Title required, minimum 2 stops to publish.
 
 **Form Validation Style:**
@@ -2132,7 +2136,7 @@ Simple yes/no at high engagement moments. Never more than two options at an emot
 **Hunt Health Monitoring:**
 - System tracks scan activity on hunt-stop Taags. If a stop receives zero scans for 30+ days while others remain active, flagged as "potentially missing."
 - Creator notification: "[Hunt Name] health alert: Stop [n] hasn't been scanned in 30 days. Is it still there?"
-- Creator actions: confirm fine, replace stop with another Taag, mark as skippable.
+- Creator actions: confirm fine, replace stop with another Taag, remove stop from hunt.
 - If Taag transitions to Relic: automatic creator notification.
 - Player-facing: "Heads up — one stop in this hunt may have moved. The creator has been notified."
 
@@ -2230,10 +2234,10 @@ Post-MVP consideration: landscape for map view in couch-mode hunt building (Phas
 | Challenge | Why It's Hard | Our Approach |
 |-----------|-------------|-------------|
 | **Camera-dependent core** | Blind/low-vision users can't point at QR codes | Manual code entry option (type/paste URL) on Scan screen. NFC tap as alternative (post-MVP). |
-| **Location-dependent gameplay** | Mobility-impaired users can't travel to re-scan | Couch-mode hunt builder. Collection/leaderboard don't require movement. Grace window + "Let it go" option. |
+| **Location-dependent gameplay** | Mobility-impaired users can't travel to re-scan | Couch-mode hunt builder. Collection/leaderboard don't require movement. Pre-expiration warning + "Let it go" option. |
 | **Celebration-heavy feedback** | Seizure risk, motion sickness | `prefers-reduced-motion` kills animation, pulsing, VHS. Static content + haptic + sound remain. Flash budget: max 2 brightness transitions/sec. |
 | **Outdoor sunlight usage** | Low contrast washes out | Neon-on-dark naturally helps. All text meets AA contrast at max brightness. Sunlight adaptation Phase 4. |
-| **Time-pressure mechanics** | Claim expiry, grace windows | All timers are days/hours, not seconds. No real-time pressure. Toast pause-on-focus. |
+| **Time-pressure mechanics** | Claim expiry | All timers are days/hours, not seconds. No real-time pressure. Toast pause-on-focus. |
 | **User-generated content** | Taag names, clues may be inaccessible | Content moderation. Clue readability enforced (16px min, contrast). No images-as-text. |
 
 **Alternative Scan Input:**
