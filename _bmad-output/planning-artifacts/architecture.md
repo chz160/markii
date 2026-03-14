@@ -79,7 +79,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 | **Spatial data** | Taags, Hunts, Stops, Scans, Leaderboards | PostGIS `GEOGRAPHY(Point, 4326)` with GiST indexes. NetTopologySuite in EF Core. |
 | **Content moderation** | Taag names, clue text, hunt descriptions, completion messages | Single `CheckText` function: OpenAI Moderation API with regex blocklist fallback. Called inline before every UGC save. 100-200ms latency acceptable in all write paths. **Resilience chain:** (1) HttpClient timeout 2 seconds on OpenAI call, (2) on timeout/error → fall back to regex blocklist only, (3) circuit breaker — after 3 consecutive OpenAI failures, skip API call for 5 minutes (blocklist only), log every skip, reset after successful call. **Never block the user from naming** — worst case, a marginal name passes during an outage and is caught in periodic review. |
 | **Event dispatch** | Scan processing → push notifications | **Bounded** `Channel<ScanNotification>` (capacity ~1000) + one `BackgroundService` consumer at MVP. When full, `TryWrite` returns false — scan still succeeds, notification is dropped and logged. Only async side effect is push notification dispatch. No mediator framework. Add typed messages when 3+ distinct async effects exist. `Task.Run` is banned — always use `BackgroundService`. Notifications are "nice to have" — scan success is critical. Lost notifications during outage are acceptable at MVP vs. adding a durable queue. |
-| **Offline resilience** | Scan claims, hunt data | Two distinct client-side subsystems: (1) **Scan retry queue** — simple retry with idempotency tokens. Server timestamp wins (no temporal fairness). **Drain throttle: 1 scan/second** when reconnecting (not all at once) to avoid hitting rate limiter. Show progress: "Syncing 47 of 312 scans..." Batch endpoint (`POST /api/v1/scans/batch`) is a documented post-MVP improvement. (2) **Hunt data cache** — pre-cache when user joins a hunt, non-negotiable for real-world play. `IMemoryCache` with 30-second TTL on server side is the entire caching architecture at MVP. |
+| **Offline resilience** | Scan claims, hunt data | Two distinct client-side subsystems: (1) **Scan retry queue** — simple retry with idempotency tokens. Server timestamp wins (no temporal fairness). **Drain throttle: 1 scan every 2 seconds (2000ms interval)** when reconnecting (not all at once) to avoid hitting rate limiter. Show progress: "Syncing 47 of 312 scans..." Batch endpoint (`POST /api/v1/scans/batch`) is a documented post-MVP improvement. (2) **Hunt data cache** — pre-cache when user joins a hunt, non-negotiable for real-world play. `IMemoryCache` with 30-second TTL on server side is the entire caching architecture at MVP. |
 | **Regulatory compliance** | User registration, data collection, location tracking, UGC | COPPA age gate at account creation on first launch, GPC signal handling, minimum-precision GPS, 45-day deletion SLA. |
 | **Rate limiting & anti-fraud** | Scan endpoint, Taag detail/spatial endpoints, global fallback | Built-in .NET rate limiting middleware. Scan endpoint: token bucket 30/min per authenticated user. `GET /api/v1/taags/{id}` and `GET /api/v1/taags?lat=&lng=&radiusMeters=`: 60/min per user (prevents enumeration/scraping of the Taag databank). Global: fixed window 100/min per IP. Client handles 429 with retry + backoff, never shows error to user. |
 | **Scan pipeline resilience** | All downstream systems | Single ingest point for all platform data. Requires circuit breakers on downstream dependencies (moderation, event channel). Graceful degradation: scan succeeds even if notification dispatch fails. Health monitoring on scan endpoint as primary availability signal. **Input validation at the boundary:** max QR content length 2048 chars (reject longer). **Scheme whitelist for normalization:** only `http://` and `https://` URLs are normalized; all other content types (tel:, mailto:, javascript:, raw text) stored as-is in `RawContent` with raw string as lookup key. The normalization function is a **security-critical boundary** — first server-side code to process attacker-controlled input from the physical world. Dedicated test suite, review required on any change. **Self-referential URL detection:** if QR content matches TaagBack's own domain/deep link scheme, the client routes to the deep link handler (e.g., open a hunt), NOT the scan API — no Taag is created for TaagBack URLs. This is a client-side ScannerService responsibility. **Simultaneous first-scan race condition:** unique constraint on `NormalizedContent` prevents duplicate Taags. On `DbUpdateException` (unique violation), the scan service catches the error, reloads the existing Taag, and processes the scan as a Collection event instead of FirstDiscovery. The second user never sees an error — they just aren't the pioneer. |
@@ -457,7 +457,8 @@ Structured log parameters (not string interpolation) from Day 1 so logs are quer
 │  HuntId (FK → Hunt)                                              │
 │  TaagId (FK → Taag)                                              │
 │  SortOrder (int, gap-based: 100, 200, 300...)                    │
-│  ClueText (moderated)                                            │
+│  ClueTitle (varchar 30, required, moderated)                     │
+│  ClueText (varchar 280, required, moderated)                     │
 │  HintText (nullable, moderated)                                  │
 │  GeofenceRadius (int, meters, default 50)                        │
 │  CreatedAt (timestamptz)                                         │
@@ -501,10 +502,13 @@ Structured log parameters (not string interpolation) from Day 1 so logs are quer
 - **Gap-based SortOrder** (100, 200, 300) — reorder stops without rewriting every row. Insert between 200 and 300 → use 250. On gap exhaustion (no integer between adjacent values), re-gap all stops in that hunt to fresh 100-increments.
 - **Lazy claim expiration with optimistic concurrency** — no `ExpiresAt` column. Check `ClaimRenewedAt + 30 days < now` at scan time. Claim state changes are lazy (evaluated on scan), but **expiration notifications are proactive** — a daily `BackgroundService` queries for newly-expired claims and dispatches notifications via Channel (FR17/FR18). It does NOT change claim state — that stays lazy at scan time. Concurrency token: `Taag.ClaimRenewedAt` configured via `.IsConcurrencyToken()` in `TaagConfiguration.cs` (fluent API, not data annotation). EF Core includes the old value in the WHERE clause on updates, causing `DbUpdateConcurrencyException` if another transaction changed it — second write retries → sees the new controller.
 - **Claim renewal is implicit** — scanning a Taag you control automatically extends `ClaimRenewedAt` by 30 days. No separate renewal endpoint. The scan outcome returns `claimRenewal` to trigger the appropriate client celebration.
+- **ScanOutcome.unclaimedDiscovery** — fires when the scanned Taag already exists in the databank AND `CurrentControllerId` is null (claim expired or pioneer never claimed). The client uses this to trigger the Discovery celebration variant with a "Claim it / Just collect" choice. Distinct from `firstDiscovery` (Taag didn't exist before) and `collection` (Taag has an active controller).
 - **NormalizedContent as unique index** — the primary lookup path. Normalize: lowercase scheme/host, strip trailing slash, sort query params, strip default ports (80/443), strip fragments, normalize URL encoding.
 - **ScanEvent as append-only log** — never updated, never deleted. The audit trail and the analytics source. Partition by month when table exceeds ~10M rows (growth phase).
 - **All timestamps are `timestamptz`** — PostgreSQL stores UTC, EF Core reads/writes DateTimeOffset.
 - **Taags are never hard-deleted.** `Status` enum (Active/Suspended/Removed/Ghost/Relic) controls visibility. Ghost (QR code URL resolves to dead/404 link) and Relic (QR code physically removed but was previously sourced) are defined in the schema for Phase 2 implementation. Suspended/Removed Taags don't appear in new scan results. Hunts containing a suspended Taag: creator is notified, players mid-hunt get a skip option ("this stop is temporarily unavailable"). FK constraints stay intact, no cascading deletes.
+- **HuntStop.ClueTitle** — required short-form clue label (varchar 30, moderated). Displayed in the ClueCard Peek state — a minimized single-line bar at screen top while the camera is active. Separate from `ClueText` to support the UX's Peek/Active state distinction.
+- **HuntStop.ClueText** — required clue body (varchar 280, moderated). Displayed in the ClueCard Active state.
 - **HuntStop.HintText** — optional hint text provided by the hunt creator. When present, the system offers hints to players after 3 unsuccessful scan attempts at this stop. When null, no hint is available.
 - **HuntStop unique constraint `(HuntId, TaagId)`** — same Taag cannot appear twice in the same hunt. If a creator wants to revisit a location, they create a new hunt.
 - **Player.DisplayName is intentionally NOT unique** — display names are cosmetic, not identifiers. Leaderboards show DisplayName + first 4 chars of PlayerId as discriminator if duplicates exist. Avoids display name squatting and onboarding friction.
@@ -695,6 +699,7 @@ These rules run in frontend CI, catching violations at build time.
 | DELETE | `/api/v1/hunts/{huntId}/stops/{stopId}` | PromotedAccount (creator) | Remove stop |
 | POST | `/api/v1/hunts/{huntId}/stops/reorder` | PromotedAccount (creator) | Reorder stops `{ stopIds: [...] }` |
 | POST | `/api/v1/hunts/{huntId}/join` | Authenticated | Join hunt → `HuntProgressDto` + first clue |
+| GET | `/api/v1/taags/{taagId}/location-context` | Authenticated | On-demand location enrichment for naming ceremony (returns cached data or triggers fast reverse geocode) |
 | GET | `/api/v1/players/me/collection` | Authenticated | My scanned Taags (derived from ScanEvents) |
 | GET | `/api/v1/players/me/hunts` | Authenticated | My active/completed hunts |
 | DELETE | `/api/v1/hunts/{huntId}` | PromotedAccount (creator) | Archive hunt (sets Status = Archived) |
@@ -730,7 +735,7 @@ Client never sends a TaagId. QR content is the identifier from the client's pers
 
 **ScanResultDto (server → client):**
 ```
-outcome: ScanOutcome      — always present (firstDiscovery, claimRenewal, collection, contestedClaim)
+outcome: ScanOutcome      — always present (firstDiscovery, unclaimedDiscovery, claimRenewal, collection, contestedClaim)
 taag: TaagSummaryDto      — always present
 isNewDiscovery: bool      — always present
 pioneerEligible: bool     — can this user name the Taag?
@@ -738,10 +743,16 @@ claimStatus: string       — "claimed", "expired", "available"
 huntProgress: {           — nullable (only if scan advanced a hunt)
   huntId: uuid
   huntTitle: string
-  currentStopOrder: int
-  totalStops: int
+  progressPhase: string   — "early", "middle", "late", "final" (server-computed, no numeric position leaked)
   nextClue: string?       — null if hunt just completed
   isComplete: bool
+  nearbyHuntHints: [{     — nullable, max 2 items, only present when isComplete is true
+    huntId: uuid
+    huntTitle: string
+    firstCluePreview: string   — truncated first clue title
+    stopCount: int             — total stops in the hinted hunt (pre-join decision data, not mid-hunt progress)
+    distanceMeters: int
+  }]?
 }
 ```
 
@@ -751,6 +762,7 @@ id: uuid
 customName: string?
 approximateLocation: string?    — neighborhood/city level (GPS truncated to 2 decimal places ~1.1km)
 claimStatus: string
+claimExpiresAt: DateTimeOffset?  — only populated when claimStatus is "claimed" by requesting user; client computes 7-day warning locally
 originalDiscoverer: PlayerSummaryDto
 currentController: PlayerSummaryDto?
 ```
@@ -838,6 +850,8 @@ Three steps, in order, before any API call.
 2. **Organic discovery** — during scan, if scanned Taag is stop #1 of a published hunt the player hasn't joined, auto-create HuntProgress and include hunt info in `ScanResultDto`.
 
 Scan-time hunt check: first check active HuntProgress (joined hunts), then lightweight check for "is this Taag stop #1 of any unjoinable published hunt?"
+
+**Hunt Completion Response:** When `isComplete` is true in the `huntProgress` block of `ScanResultDto`, the server includes up to 2 `nearbyHuntHints` — other published hunts with at least one stop near the player's recent scan locations. This powers the "one more run" retention prompt without requiring a general-purpose hunt browse/discovery endpoint. Full spatial hunt discovery (`GET /api/v1/hunts?lat=&lng=&radiusMeters=`) is deferred to Fast Follow.
 
 **Permission-Gated Operations:** Custom ASP.NET Core authorization policy `RequirePromotedAccount`. Applied via `[Authorize(Policy = "PromotedAccount")]` on endpoints requiring age-verified users (Taag naming, hunt creation). Policy checks age-verification claim from Firebase JWT. No scattered permission checks in services.
 
@@ -1363,6 +1377,7 @@ Admin policy applied to `GET /admin/reports`, `PUT /admin/reports/{id}`, and `PU
 - Accuracy tolerances: triangulation should converge to within 10-20m after 3+ scans from different angles
 - External API calls (Google Places, vision analysis) are async background tasks, not in any user-facing request path
 - Location data improves over time as more users scan the same Taag from different positions
+- **On-demand location context for naming ceremony:** `GET /api/v1/taags/{taagId}/location-context` (Authenticated). Returns cached enrichment data if available, or triggers a fast reverse geocode on demand. On a `firstDiscovery` scan, the client fires this request when the naming ceremony screen mounts, with a 2-second grace period. If enrichment data arrives in time, the naming ceremony gets neighborhood context and AI name suggestions. If not, the ceremony proceeds without — no UX degradation, just a "nice to have" that usually works. This keeps the scan pipeline fast and free of synchronous external API calls.
 
 ### Ephemeral Image Processing Policy
 

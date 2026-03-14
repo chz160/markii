@@ -722,7 +722,7 @@ TaagBack's defining experience is a three-beat sequence: (1) Scan any real-world
 - Immediate visual feedback when code is DETECTED (frame highlight, haptic pulse) — before server response
 - Transition animation: camera feed morphs into TaagBack's game layer (the "lens reveal")
 - System checks: Is this code in the databank? Who owns it? Is it part of a hunt?
-- Backend enrichment at scan time: Google Places API, Street View, reverse geocoding — location context silently wraps around the Taag with zero user effort
+- Backend enrichment is **asynchronous and progressive** — reverse geocoding, Google Places, Street View, and vision analysis run in a background pipeline after the scan completes. On a pioneer's first scan, the client requests location context via a dedicated endpoint (`GET /api/v1/taags/{taagId}/location-context`) when the naming ceremony mounts. If enrichment data arrives during the celebration window (~2-3 seconds), the naming ceremony enhances with neighborhood context and AI name suggestions. If not, the ceremony proceeds without — location enrichment is a progressive enhancement, never a blocker. Subsequent scans of the same Taag benefit from cached enrichment data.
 
 **3. Feedback (branching by outcome):**
 
@@ -784,7 +784,7 @@ TaagBack's defining experience is a three-beat sequence: (1) Scan any real-world
 
 ### 7.8 Context-Aware Scan Responses
 
-The scan experience subtly adapts based on where the user is, powered by location API enrichment at scan time (Google Places, Street View, reverse geocoding):
+The scan experience subtly adapts based on where the user is, powered by async location enrichment data (Google Places, Street View, reverse geocoding) that accumulates progressively as Taags are scanned. Context-aware responses improve over time as enrichment data populates — first scans of new Taags may not have full context, but subsequent visits benefit from cached enrichment:
 
 | Context | Emotional Tone | Emphasis |
 |---------|---------------|----------|
@@ -799,9 +799,9 @@ The scan experience subtly adapts based on where the user is, powered by locatio
 
 The app detects local density and adjusts nudges, messaging, and feature emphasis accordingly. Solo pioneer in a quiet area feels like an explorer, not a lonely player.
 
-**Location enrichment feeds:**
-- AI name suggestions ("You're at Blue Bottle Coffee on 4th Ave" → suggests "Fourth Wave")
-- Taag profile cards (auto-populated storefront photo, business category, neighborhood name)
+**Location enrichment feeds (progressive — data accumulates asynchronously after scans):**
+- AI name suggestions ("You're at Blue Bottle Coffee on 4th Ave" → suggests "Fourth Wave") — available during naming ceremony if enrichment completes in time, otherwise naming proceeds without
+- Taag profile cards (auto-populated storefront photo, business category, neighborhood name) — populated as enrichment data arrives
 - Auto-categorization (URL analysis + location context = high confidence)
 - Hunt builder palette (creators see rich context around each Taag)
 - Ghost Taag detection (Google Places confirms permanently closed)
