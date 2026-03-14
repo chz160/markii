@@ -284,9 +284,9 @@ The emotional tone is closer to a **magic trick** than a game. The feeling that 
 
 - **"One More Run" Hooks (Day 1)** — Every screen's closing beat points toward the next action. Finished a scan walk? "3 unclaimed Taags within 200m." Completed a hunt? "2 more hunts nearby." Lost a claim? "Add to watchlist." Checked leaderboard? "You're 4 Taags behind #2." The app never ends a session on a closed note.
 
-**Sound Design (Day 1):**
+**Sound Design (Day 1 — Sprint 2 implementation alongside celebration components):**
 
-Sound is required, not optional. Minimum 4 audio signatures: pioneer fanfare, "darn!" sound, hunt entry atmospheric shift, and crescendo build. Sound follows device mode — silent/vibrate mode replaces audio with haptic celebration patterns. The blackout crescendo specifically requires audio; a silent crescendo is a contradiction.
+Sound is required, not optional. Minimum 4 audio signatures: pioneer fanfare, "darn!" sound, hunt entry atmospheric shift, and crescendo build. Sound follows device mode — silent/vibrate mode replaces audio with haptic celebration patterns. The blackout crescendo specifically requires audio; a silent crescendo is a contradiction. `expo-av` is scheduled for Sprint 2 alongside `CelebrationOverlay` and `ScanTransition` component work — celebrations without sound are visually complete but emotionally incomplete.
 
 - **Blackout pause timing:** 2-3 seconds of pure black screen. Shorter = glitch. Longer = magic. The uncertainty ("did it crash?") before the payoff is the emotional design.
 
@@ -298,12 +298,27 @@ The creator's completion message is presented as a personal letter — handwritt
 
 Hunt deep links should survive the app install process where feasible. Ideally, if a user taps a shared hunt link, installs TaagBack, and opens the app for the first time, the hunt invitation is waiting. Deferred deep linking is desirable but not guaranteed across all platforms and install paths — best-effort implementation. Technical requirement: expo-linking with deferred deep link support.
 
+**Scan Image Capture UX (Day 1):**
+
+After the scan celebration settles (~2-3 seconds), a subtle prompt appears inviting the user to capture the area around the QR code: *"Help TaagBack see what's around this Taag."* The interaction is:
+- **Distinct from QR scanning** — a deliberate shutter button tap, NOT the automatic QR detection. The camera is already active (scan mode), but the image capture requires an explicit "capture" action to avoid confusion about which camera mode the user is in.
+- **Optional** — dismissing the prompt is always easy and never penalizing. Image capture enriches location data but is never a gate.
+- **Framed as contribution** — explorer energy ("You're mapping the hidden world"), not data collection energy.
+- **Async** — the image uploads in the background after capture. No loading states, no blocking. If upload fails, it retries silently.
+- **Post-celebration timing** — appears after the emotional peak (pioneer celebration, naming ceremony) has resolved, during the emotional airlock / summary card phase. Never interrupts the celebration itself.
+
+The captured image feeds EXIF-based location triangulation at MVP. Phase 2 adds vision analysis for richer Taag profiles.
+
 **Hunt Recovery UX (Day 1):**
 
 - **Broken stop detection:** If a scan at a hunt stop fails 3 times, offer: "Having trouble? [Report this stop] [Try the hint]." Hints are only shown if the hunt creator provided one for that stop.
 - **Progress preservation:** Hunt progress auto-saves. Quitting and returning resumes from the last completed stop, not stop 1. Real-world time investment MUST be respected.
 - **Partial completion credit:** Abandoned hunts show in history: "Campus Cryptic — 5 stops completed (incomplete)." Not a celebration, but an acknowledgment.
 - **Dual geofencing:** Relaxed geofence for hunt stop verification (QR token match is primary proof of presence). Strict geofence for competitive claiming and Taag sourcing.
+
+**Admin Tooling (MVP Scope):**
+
+No admin UI at MVP. Admin operations (moderation queue review, Taag status changes, report management) are performed via direct API calls (Postman/curl/REST client). This is an intentional scoping decision — the sole admin is the developer. A designed admin experience will be added when the team or user base scales to require it.
 
 **Basic Creator Stats (Day 1):**
 
@@ -625,6 +640,9 @@ Six signature components that define the brand experience:
 - Spacing scale: 4px base unit, consistent with stamp/sticker grid alignment
 - Border radius: Mix of sharp (arcade/terminal aesthetic) and rounded (sticker/badge shapes)
 - Shadow system: Minimal — glow effects over drop shadows, matching CRT/neon aesthetic
+
+**API Data Dependency — `userRelationship` field:**
+TaagCard variant selection (stamp vs. pencil sketch vs. faded) depends on a `userRelationship` field in `TaagSummaryDto` from the API, returning one of: `pioneered`, `claimed`, `visited`, `watchlisted`, `none`. This field is computed server-side from ScanEvents and Watchlist data for the requesting user.
 
 **Component Variants:**
 - TaagCard variants: Owned (full stamp), Visited (pencil sketch), Claimed-by-other (faded), Ghost (glitch effect)

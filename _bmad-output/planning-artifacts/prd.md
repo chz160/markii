@@ -340,6 +340,8 @@ Niantic's Wayfarer requires nomination, community review, and approval (days to 
 
 ### Post-MVP Features (Phase 2)
 
+- Taag profile enrichment from external sources — reverse geocoding, nearby points of interest (FR54)
+- Vision analysis on scan images — business type extraction, name suggestions, Taag personality graphic (FR55, Phase 2/3)
 - Gen AI Taag name suggestions and clue assistant
 - Auto-categorization of Taag types from URL analysis
 - Category-based badges and titles
@@ -460,8 +462,8 @@ Niantic's Wayfarer requires nomination, community review, and approval (days to 
 - FR51: The system can upload scan images asynchronously without blocking the scan result flow.
 - FR52: The system can extract EXIF metadata (GPS coordinates, compass bearing, estimated distance) from scan images to triangulate Taag location.
 - FR53: The system can refine Taag location using triangulated data from multiple scan images over time.
-- FR54: The system can enrich Taag profiles with contextual data from external sources (reverse geocoding, nearby points of interest).
-- FR55: The system can process uploaded images through vision analysis to extract contextual data (business type, surroundings, name suggestions, Taag personality graphic), then delete source images after processing.
+- FR54: _(Phase 2)_ The system can enrich Taag profiles with contextual data from external sources (reverse geocoding, nearby points of interest).
+- FR55: _(Phase 2/3)_ The system can process uploaded images through vision analysis to extract contextual data (business type, surroundings, name suggestions, Taag personality graphic), then delete source images after processing.
 
 ## Non-Functional Requirements
 

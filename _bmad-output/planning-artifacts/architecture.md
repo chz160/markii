@@ -128,6 +128,8 @@ dotnet new webapi -n TaagBack.Api --framework net10.0
 - `Microsoft.EntityFrameworkCore.Design` — Migrations tooling
 - `Asp.Versioning.Http` — API versioning (`/api/v1/`)
 - `AspNetCore.HealthChecks.NpgSql` — PostgreSQL health check for `GET /health` endpoint
+- `MetadataExtractor` — EXIF metadata extraction from scan images (GPS, compass bearing)
+- `Azure.Storage.Blobs` — Blob storage for scan images (or S3-compatible via MinIO for local dev)
 
 **Sprint 2 packages (Auth):**
 - `Microsoft.AspNetCore.Authentication.JwtBearer` — Firebase JWT validation
@@ -169,8 +171,8 @@ TaagBack.Api/
 
 **Infrastructure files (Sprint 1):**
 - `Dockerfile` — Multi-stage build (`mcr.microsoft.com/dotnet/sdk:10.0` build, `mcr.microsoft.com/dotnet/aspnet:10.0` runtime)
-- `docker-compose.dev.yml` — PostGIS container for local development (`postgis/postgis:17-3.5`)
-- `appsettings.Development.json` — Local connection strings, API keys
+- `docker-compose.dev.yml` — PostGIS container (`postgis/postgis:17-3.5`) + MinIO container (`minio/minio:latest`) for local S3-compatible blob storage
+- `appsettings.Development.json` — Local connection strings, MinIO credentials, API keys
 - `.env.example` — Template for required environment variables (checked into git, `.env` in `.gitignore`)
 
 **Structural decisions baked into scaffold:**
@@ -200,10 +202,10 @@ npx create-expo-app@latest TaagBack --template tabs
 - `@react-native-firebase/auth` — Firebase Auth SDK
 - `expo-secure-store` — Secure token storage (iOS Keychain / Android Keystore)
 
-**Sprint 3 packages (Polish):**
+**Sprint 2 packages (Celebrations + Sound):**
 - `react-native-reanimated` — Gesture-driven animations, shared element transitions
 - `lottie-react-native` — Pre-built celebration animation sequences
-- `expo-av` — Sound signatures (pioneer fanfare, scan chirp, crescendo)
+- `expo-av` — Sound signatures (pioneer fanfare, scan chirp, crescendo). Sound is required for MVP celebrations — a silent pioneer celebration or blackout crescendo is emotionally incomplete.
 
 **Sprint 1 infrastructure:**
 - `eas.json` — EAS Build configuration for development builds (required for QR scanning on device)
@@ -515,6 +517,22 @@ Structured log parameters (not string interpolation) from Day 1 so logs are quer
 - **Collection is derived, not stored.** A player's collection = all distinct Taags from their ScanEvents. No separate Collection entity. Query via `ScanEvent(PlayerId, ScannedAt DESC)` index.
 - **Watchlist** — tracks which users are watching which Taags for notification dispatch when claims expire or change hands.
 - **Report** — polymorphic target (Taag, Hunt, HuntStop) with status workflow (Pending → Reviewed/Dismissed). Low volume, admin-reviewed.
+- **ScanImage** — image captured during a scan for EXIF-based location triangulation. Entity:
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                         ScanImage                                │
+│  Id (UUID PK)                                                    │
+│  ScanEventId (FK → ScanEvent)                                    │
+│  StorageKey (string — blob storage path)                         │
+│  ExifLatitude (double, nullable)                                 │
+│  ExifLongitude (double, nullable)                                │
+│  ExifBearing (double, nullable)                                  │
+│  ProcessedAt (timestamptz, nullable)                             │
+│  CreatedAt (timestamptz)                                         │
+└──────────────────────────────────────────────────────────────────┘
+```
+Images are retained for Phase 2 vision analysis processing. EXIF extraction runs in-process via `MetadataExtractor` NuGet package in the `NotificationBackgroundService` consumer (alongside notification dispatch). Triangulation service refines `Taag.Location` as multiple scan images accumulate from different angles — target convergence within 10-20m after 3+ scans.
 
 **Indexes (beyond PKs and unique constraints):**
 - `Taag.NormalizedContent` — unique, the hottest query path
@@ -708,6 +726,7 @@ These rules run in frontend CI, catching violations at build time.
 | DELETE | `/api/v1/taags/{taagId}/watchlist` | Authenticated | Remove Taag from watchlist |
 | GET | `/api/v1/players/me/watchlist` | Authenticated | My watchlisted Taags |
 | POST | `/api/v1/reports` | Authenticated | Submit a report |
+| POST | `/api/v1/scans/{scanEventId}/image` | Authenticated | Upload scan surroundings image (multipart/form-data). Returns 202 Accepted. EXIF extraction runs async via BackgroundService. |
 | GET | `/api/v1/leaderboards/{type}?period=` | AllowAnonymous | `sourcers`, `scanners`, `hunters`; optional `period` query param: `week`, `month`, `alltime` (default `alltime`) |
 | GET | `/api/v1/admin/reports` | AdminOnly | List reports (filterable by status) |
 | PUT | `/api/v1/admin/reports/{reportId}` | AdminOnly | Update report status (Reviewed/Dismissed) |
@@ -766,6 +785,7 @@ customName: string?
 approximateLocation: string?    — neighborhood/city level (GPS truncated to 2 decimal places ~1.1km)
 claimStatus: string
 claimExpiresAt: DateTimeOffset?  — only populated when claimStatus is "claimed" by requesting user; client computes 7-day warning locally
+userRelationship: string        — "pioneered", "claimed", "visited", "watchlisted", "none" — computed server-side from ScanEvents + Watchlist for the requesting user. Used by client to select TaagCard visual variant (stamp vs. pencil sketch vs. faded).
 originalDiscoverer: PlayerSummaryDto
 currentController: PlayerSummaryDto?
 ```
@@ -966,6 +986,7 @@ TaagBack.Api/
 │       ├── PlayerConfiguration.cs
 │       ├── TaagConfiguration.cs
 │       ├── ScanEventConfiguration.cs
+│       ├── ScanImageConfiguration.cs
 │       ├── HuntConfiguration.cs
 │       ├── HuntStopConfiguration.cs
 │       ├── HuntProgressConfiguration.cs
@@ -979,7 +1000,8 @@ TaagBack.Api/
 │   └── Models/
 │       ├── ScanRequestDto.cs
 │       ├── ScanResultDto.cs
-│       └── ScanEvent.cs                  # Entity
+│       ├── ScanEvent.cs                  # Entity
+│       └── ScanImage.cs                  # Entity — EXIF metadata from scan images
 │
 ├── Taags/
 │   ├── TaagsController.cs
@@ -1390,31 +1412,38 @@ This application is developed primarily by AI agents. Structure decisions priori
 options.AddPolicy("AdminOnly", policy => policy.RequireClaim("admin", "true"));
 ```
 
-Admin policy applied to `GET /admin/reports`, `PUT /admin/reports/{id}`, and `PUT /admin/taags/{id}/status` at MVP. No admin UI — endpoints are callable via Postman/curl for content moderation. Admin claim is set manually in the auth provider — no self-service admin promotion.
+Admin policy applied to `GET /admin/reports`, `PUT /admin/reports/{id}`, and `PUT /admin/taags/{id}/status` at MVP. **No admin UI at MVP** — admin operations are performed via direct API calls (Postman/curl/REST client). This is an intentional scoping decision for a solo developer; an admin web panel will be added when the team scales. Admin claim is set manually in the auth provider — no self-service admin promotion.
 
 ### Location Intelligence Subsystem
 
-**Purpose:** Triangulate accurate Taag physical locations from scan image metadata and enrich Taag profiles with contextual data.
+**Purpose:** Triangulate accurate Taag physical locations from scan image metadata and (Phase 2+) enrich Taag profiles with contextual data.
 
-**Pipeline:**
-1. User captures image during scan → image uploaded asynchronously (does NOT block scan result flow)
-2. Server extracts EXIF metadata: GPS coordinates, compass bearing, estimated distance from QR code
-3. Triangulation algorithm refines Taag location using data from multiple scans over time
-4. External enrichment pipeline: reverse geocoding, Google Places nearby search, Street View imagery analysis
-5. AI vision analysis on uploaded images: extracts business type, surrounding context, name suggestions, Taag personality graphic
-6. Source images deleted after processing (ephemeral storage — process → extract → delete)
+**MVP Pipeline (Phase 1 — EXIF triangulation only):**
+1. User captures image of QR code surroundings during scan → image uploaded asynchronously via `POST /api/v1/scans/{scanEventId}/image` (does NOT block scan result flow)
+2. Image stored in blob storage (Azure Blob Storage / MinIO for local dev) linked to `ScanImage` entity
+3. `NotificationBackgroundService` processes queued images: extracts EXIF metadata (GPS coordinates, compass bearing) via `MetadataExtractor` NuGet package
+4. Triangulation algorithm refines `Taag.Location` using data from multiple scans over time
+5. Images retained in blob storage for Phase 2 vision analysis processing
+
+**Phase 2+ Pipeline (deferred):**
+6. External enrichment pipeline: reverse geocoding, Google Places nearby search, Street View imagery analysis (FR54)
+7. AI vision analysis on uploaded images: extracts business type, surrounding context, name suggestions, Taag personality graphic (FR55)
+8. Source images deleted after Phase 2 processing completes (ephemeral storage — process → extract → delete)
 
 **Architectural Notes:**
 - Image upload is async — scan returns immediately, image processing happens in background
-- Blob storage for ephemeral image holding (process within minutes, then delete)
+- Blob storage retains images until Phase 2 vision processing is implemented (no delete-after-EXIF-extract at MVP)
 - Accuracy tolerances: triangulation should converge to within 10-20m after 3+ scans from different angles
-- External API calls (Google Places, vision analysis) are async background tasks, not in any user-facing request path
+- EXIF extraction runs in-process (no external API calls at MVP) — lightweight and fast
 - Location data improves over time as more users scan the same Taag from different positions
-- **On-demand location context for naming ceremony:** `GET /api/v1/taags/{taagId}/location-context` (Authenticated). Returns cached enrichment data if available, or triggers a fast reverse geocode on demand. On a `firstDiscovery` scan, the client fires this request when the naming ceremony screen mounts, with a 2-second grace period. If enrichment data arrives in time, the naming ceremony gets neighborhood context and AI name suggestions. If not, the ceremony proceeds without — no UX degradation, just a "nice to have" that usually works. This keeps the scan pipeline fast and free of synchronous external API calls.
+- **On-demand location context for naming ceremony:** `GET /api/v1/taags/{taagId}/location-context` (Authenticated). At MVP, returns triangulated location data if available. Phase 2 adds reverse geocode and AI name suggestions. On a `firstDiscovery` scan, the client fires this request when the naming ceremony screen mounts, with a 2-second grace period. If data arrives in time, the naming ceremony enhances with location context. If not, the ceremony proceeds without — no UX degradation. This keeps the scan pipeline fast and free of synchronous external API calls.
 
-### Ephemeral Image Processing Policy
-
-Images uploaded during scan are processed ephemerally — vision analysis extracts contextual data (business type, surroundings, name suggestions, Taag personality graphic), then source images are deleted. Processing must complete quickly as the system needs contextual data to recommend names and generate Taag personality graphics during the naming flow.
+**Infrastructure:**
+- `Azure.Storage.Blobs` for production blob storage
+- MinIO container in `docker-compose.yml` for local dev (S3-compatible API)
+- `MetadataExtractor` NuGet package for EXIF parsing (zero external API dependencies)
+- `ScanImage` entity in `Data/Configurations/ScanImageConfiguration.cs`
+- Image upload endpoint in `Scanning/ScanController.cs`
 
 ### Deferred Deep Linking
 
@@ -1459,6 +1488,9 @@ The Step 6 project tree supports all architectural decisions. Feature folders (A
 | FR36-FR37 | ✅ | Admin endpoints added: `GET /admin/reports`, `PUT /admin/reports/{id}`, `PUT /admin/taags/{id}/status` |
 | FR39-FR43 | ✅ | Account required on first launch, age verification at registration, social login via Firebase Auth |
 | FR44-FR47 | ✅ | Anti-fraud in cross-cutting concerns, rate limiting per ADR-5 |
+| FR50-FR53 | ✅ | Image capture + async upload + EXIF extraction + triangulation. ScanImage entity, blob storage, MetadataExtractor |
+| FR54 | ⬜ | Phase 2 — External enrichment (reverse geocoding, POI) deferred |
+| FR55 | ⬜ | Phase 2/3 — Vision analysis deferred. Source images retained for future processing |
 
 **Non-Functional Requirements Coverage (22/22):**
 
