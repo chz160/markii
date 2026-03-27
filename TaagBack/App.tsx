@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import CreateHuntScreen from './src/screens/CreateHuntScreen';
 import HuntDetailScreen from './src/screens/HuntDetailScreen';
 import HuntListScreen from './src/screens/HuntListScreen';
 import QrScanScreen from './src/screens/QrScanScreen';
@@ -17,6 +18,11 @@ export default function App() {
     setScreen('detail');
   };
 
+  const handleHuntCreated = (hunt: Hunt) => {
+    setSelectedHunt(hunt);
+    setScreen('detail');
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
@@ -24,6 +30,12 @@ export default function App() {
         <HuntListScreen
           onSelectHunt={handleSelectHunt}
           onCreateHunt={() => setScreen('create')}
+        />
+      )}
+      {screen === 'create' && (
+        <CreateHuntScreen
+          onBack={() => setScreen('list')}
+          onCreated={handleHuntCreated}
         />
       )}
       {screen === 'detail' && selectedHunt && (
