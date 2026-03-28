@@ -3,6 +3,10 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
 completedAt: '2026-03-14'
+lastEdited: '2026-03-27'
+editHistory:
+  - date: '2026-03-27'
+    changes: 'Added Clone Taag architectural support: CloneGroup entity, Taag.Type enum, HuntStop.CloneGroupId for Clone Group stops, CloneCollection scan outcome, Clone-aware hunt progression query, admin Clone flagging endpoint, CloneReclassificationNotification channel message, indexes for Clone detection and group lookup, FR mapping updates, project structure updates.'
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/product-brief-TaagBack-2026-03-10.md'
@@ -27,7 +31,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 
 ### Requirements Overview
 
-**Functional Requirements (47 FRs across 8 domains):**
+**Functional Requirements (55 FRs across 9 domains):**
 
 | Domain | FRs | Architectural Significance |
 |--------|-----|---------------------------|
@@ -38,7 +42,8 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 | Hunt Play & Progression | FR26-FR32 | Sequential clue reveal, geofence + QR token verification at each stop. The architecturally significant query is the **scan-time hunt progression check** — "is this QR code the next stop in any active hunt for this user?" This runs on every scan for every user with an active hunt. |
 | Safety, Moderation & Reporting | FR33-FR38 | Single moderation function (`CheckText`) wrapping OpenAI Moderation API with regex blocklist fallback. Called inline before every UGC save — Taag names, clue text, hunt descriptions, completion messages. No separate modes needed; all UGC write paths have natural user pauses that tolerate 100-200ms. |
 | Authentication & User Management | FR39-FR43 | Account required on first launch. Firebase Auth for social login and JWT. Wrapped in client-side auth abstraction layer for portability. Supabase Auth (GoTrue) documented as migration target. |
-| Data Integrity & Anti-Fraud | FR44-FR47 | Duplicate QR detection ("snack wrapper problem"), impossible travel flagging, geofence verification. Rate limiting per ADR-5: scan endpoint 30/min authenticated; Taag detail 60/min; global 100/min per IP. |
+| Clone Taag System | FR46, FR56-FR63 | Clone Taag detection (algorithmic + brand URL + admin), Clone Group formation by NormalizedContent, reclassification flow with notification, Clone-to-unique promotion, Clone Group hunt stops without geofence. Post-MVP feature area — architectural hooks in data model from Day 1. |
+| Data Integrity & Anti-Fraud | FR64-FR66 | Impossible travel flagging, geofence verification. Rate limiting per ADR-5: scan endpoint 30/min authenticated; Taag detail 60/min; global 100/min per IP. |
 
 **Non-Functional Requirements (22 NFRs across 5 domains):**
 
@@ -84,7 +89,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 | **Rate limiting & anti-fraud** | Scan endpoint, Taag detail/spatial endpoints, global fallback | Built-in .NET rate limiting middleware. Scan endpoint: token bucket 30/min per authenticated user. `GET /api/v1/taags/{id}` and `GET /api/v1/taags?lat=&lng=&radiusMeters=`: 60/min per user (prevents enumeration/scraping of the Taag databank). Global: fixed window 100/min per IP. Client handles 429 with retry + backoff, never shows error to user. |
 | **Scan pipeline resilience** | All downstream systems | Single ingest point for all platform data. Requires circuit breakers on downstream dependencies (moderation, event channel). Graceful degradation: scan succeeds even if notification dispatch fails. Health monitoring on scan endpoint as primary availability signal. **Input validation at the boundary:** max QR content length 2048 chars (reject longer). **Scheme whitelist for normalization:** only `http://` and `https://` URLs are normalized; all other content types (tel:, mailto:, javascript:, raw text) stored as-is in `RawContent` with raw string as lookup key. The normalization function is a **security-critical boundary** — first server-side code to process attacker-controlled input from the physical world. Dedicated test suite, review required on any change. **Self-referential URL detection:** if QR content matches TaagBack's own domain/deep link scheme, the client routes to the deep link handler (e.g., open a hunt), NOT the scan API — no Taag is created for TaagBack URLs. This is a client-side ScannerService responsibility. **Simultaneous first-scan race condition:** unique constraint on `NormalizedContent` prevents duplicate Taags. On `DbUpdateException` (unique violation), the scan service catches the error, reloads the existing Taag, and processes the scan as a Collection event instead of FirstDiscovery. The second user never sees an error — they just aren't the pioneer. |
 | **Notification budgeting** | Push notifications | Aggregate maintenance notifications per user per period. Priority tiers: watchlist alerts > claim expiry warnings > general updates. Daily digest for low-priority at MVP. Volume scales linearly with engagement — design for this from Day 1. |
-| **Hunt integrity** | Hunt play, creator tools | Detect when hunt stops become unreachable (Taag not scanned by anyone for N days, URL dead). Creator alerts for broken hunts. Skip/report as API-level capability. |
+| **Hunt integrity** | Hunt play, creator tools | Detect when hunt stops become unreachable (Taag not scanned by anyone for N days, URL dead). Creator alerts for broken hunts. Skip/report as API-level capability. When a hunt stop's Taag is reclassified as Clone, creator is notified — stop may need clue update. Clone Group hunt stops are exempt from location health monitoring. |
 | **Hunt/Taag coupling** | Hunt engine, Scan/Taag domain | Architecturally coupled domains — bidirectional data dependency. Feature folders keep them separate for code clarity but acknowledge shared data ownership. Any future extraction must treat as single bounded context. |
 | **Scan API / Scan UX boundary** | API endpoints, mobile client | Explicit architectural boundary. Scan API returns structured data (`{ type, taag, hunt_progress }`), stable, versioned. All emotional UX (celebrations, transitions, sound, haptics) lives entirely on the client. Celebrations evolve rapidly via OTA updates without server changes. |
 | **Data exposure policy** | All API responses | **`NormalizedContent` and `RawContent` must NEVER appear in public API responses.** These fields are the strategic data asset — server-side only. Taag profile cards return: `CustomName`, approximate location (neighborhood/city level, not precise GPS), discoverer display name, current controller display name, claim status. The QR content is only received by the API from the user's own scan — never echoed back in read endpoints. |
@@ -421,7 +426,9 @@ Structured log parameters (not string interpolation) from Day 1 so logs are quer
 │  OriginalDiscovererId (FK → Player)                              │
 │  CurrentControllerId (FK → Player, nullable)                     │
 │  CustomName (varchar 30, nullable, moderated)                     │
+│  Type (enum: Unique, Clone — default Unique)                     │
 │  Status (enum: Active, Suspended, Removed, Ghost, Relic — default Active) │
+│  CloneGroupId (FK → CloneGroup, nullable)                        │
 │  ClaimRenewedAt (timestamptz, nullable)                          │
 │  CreatedAt (timestamptz)                                         │
 └──────────┬───────────────────────────────────────────────────────┘
@@ -434,9 +441,18 @@ Structured log parameters (not string interpolation) from Day 1 so logs are quer
 │  PlayerId (FK → Player)                                          │
 │  TaagId (FK → Taag)                                              │
 │  Location (GEOGRAPHY(Point, 4326))                               │
-│  Outcome (enum: FirstDiscovery, UnclaimedDiscovery, ClaimRenewal, Collection) │
+│  Outcome (enum: FirstDiscovery, UnclaimedDiscovery, ClaimRenewal, Collection, CloneCollection) │
 │  ScannedAt (timestamptz)                                         │
 │  IdempotencyKey (unique index) — client-generated UUID           │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│                         CloneGroup                               │
+│  Id (UUID PK)                                                    │
+│  NormalizedContent (unique index) — canonical content for group   │
+│  DetectionMethod (enum: Algorithmic, BrandPattern, AdminFlagged) │
+│  MemberCount (int, default 1) — denormalized count of Taags      │
+│  CreatedAt (timestamptz)                                         │
 └──────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
@@ -457,12 +473,13 @@ Structured log parameters (not string interpolation) from Day 1 so logs are quer
 │                          HuntStop                                │
 │  Id (UUID PK)                                                    │
 │  HuntId (FK → Hunt)                                              │
-│  TaagId (FK → Taag)                                              │
+│  TaagId (FK → Taag, nullable)                                    │
+│  CloneGroupId (FK → CloneGroup, nullable)                        │
 │  SortOrder (int, gap-based: 100, 200, 300...)                    │
 │  ClueTitle (varchar 30, required, moderated)                     │
 │  ClueText (varchar 280, required, moderated)                     │
 │  HintText (nullable, moderated)                                  │
-│  GeofenceRadius (int, meters, default 50)                        │
+│  GeofenceRadius (int, meters, default 50, ignored for CloneGroup stops) │
 │  CreatedAt (timestamptz)                                         │
 └──────────────────────────────────────────────────────────────────┘
 
@@ -505,10 +522,14 @@ Structured log parameters (not string interpolation) from Day 1 so logs are quer
 - **Lazy claim expiration with optimistic concurrency** — no `ExpiresAt` column. Check `ClaimRenewedAt + 30 days < now` at scan time. Claim state changes are lazy (evaluated on scan), but **expiration notifications are proactive** — a daily `BackgroundService` queries for newly-expired claims and dispatches notifications via Channel (FR17/FR18). It does NOT change claim state — that stays lazy at scan time. Concurrency token: `Taag.ClaimRenewedAt` configured via `.IsConcurrencyToken()` in `TaagConfiguration.cs` (fluent API, not data annotation). EF Core includes the old value in the WHERE clause on updates, causing `DbUpdateConcurrencyException` if another transaction changed it — second write retries → sees the new controller.
 - **Claim renewal is implicit** — scanning a Taag you control automatically extends `ClaimRenewedAt` by 30 days. No separate renewal endpoint. The scan outcome returns `claimRenewal` to trigger the appropriate client celebration.
 - **ScanOutcome.unclaimedDiscovery** — fires when the scanned Taag already exists in the databank AND `CurrentControllerId` is null (claim expired or pioneer never claimed). The client uses this to trigger the Discovery celebration variant with a "Claim it / Just collect" choice. Distinct from `firstDiscovery` (Taag didn't exist before) and `collection` (Taag has an active controller).
+- **ScanOutcome.cloneCollection** — fires when the scanned Taag has `Type = Clone`. The client uses this to trigger the Clone-specific celebration ("Clone collected!") with holographic visual treatment. Clone Taags always return `cloneCollection` regardless of prior scan history — there is no claim, no naming, just collection. The `cloneGroupId` in `TaagSummaryDto` tells the client which Clone Group the Taag belongs to.
 - **NormalizedContent as unique index** — the primary lookup path. Normalize: lowercase scheme/host, strip trailing slash, sort query params, strip default ports (80/443), strip fragments, normalize URL encoding.
 - **ScanEvent as append-only log** — never updated, never deleted. The audit trail and the analytics source. Partition by month when table exceeds ~10M rows (growth phase).
 - **All timestamps are `timestamptz`** — PostgreSQL stores UTC, EF Core reads/writes DateTimeOffset.
-- **Taags are never hard-deleted.** `Status` enum (Active/Suspended/Removed/Ghost/Relic) controls visibility. Ghost (QR code URL resolves to dead/404 link) and Relic (QR code physically removed but was previously sourced) are defined in the schema for Phase 2 implementation. Suspended/Removed Taags don't appear in new scan results. Hunts containing a suspended Taag: creator is notified, players mid-hunt get a skip option ("this stop is temporarily unavailable"). FK constraints stay intact, no cascading deletes.
+- **Taags are never hard-deleted.** `Status` enum (Active/Suspended/Removed/Ghost/Relic) controls visibility. `Type` enum (Unique/Clone) controls behavior — Clone Taags cannot be claimed or named. Ghost (QR code URL resolves to dead/404 link) and Relic (QR code physically removed but was previously sourced) are defined in the schema for Phase 2 implementation. Suspended/Removed Taags don't appear in new scan results. Hunts containing a suspended Taag: creator is notified, players mid-hunt get a skip option ("this stop is temporarily unavailable"). FK constraints stay intact, no cascading deletes.
+- **CloneGroup** — groups all Taags sharing identical `NormalizedContent` that are classified as mass-produced. `CloneGroup.NormalizedContent` matches the `Taag.NormalizedContent` of all member Taags. `MemberCount` is denormalized — incremented when a new Taag with the same content is detected, used for quick display. `DetectionMethod` records how the group was first identified. Created post-MVP when the Clone Taag detection system is implemented.
+- **Clone Taag state machine:** `Unique → Clone` (reclassification when duplicate detection triggers), `Clone → Unique` (promotion when a specific Clone instance accumulates N scans at the same GPS location within configurable radius). On `Unique → Clone`: `CurrentControllerId` set to null, `CustomName` set to null, `CloneGroupId` set to the matching CloneGroup, notification dispatched to previous controller via Channel. On `Clone → Unique`: `CloneGroupId` retained for history, `Type` set to `Unique`, Taag becomes claimable.
+- **HuntStop references either TaagId OR CloneGroupId (mutually exclusive, exactly one must be non-null).** Check constraint: `(TaagId IS NOT NULL AND CloneGroupId IS NULL) OR (TaagId IS NULL AND CloneGroupId IS NOT NULL)`. When `CloneGroupId` is set, scanning any Taag belonging to that Clone Group satisfies the stop. Geofence check is skipped for CloneGroup stops. The `HuntStop(HuntId, TaagId)` unique constraint is updated to be partial: `UNIQUE (HuntId, TaagId) WHERE TaagId IS NOT NULL`.
 - **HuntStop.ClueTitle** — required short-form clue label (varchar 30, moderated). Displayed in the ClueCard Peek state — a minimized single-line bar at screen top while the camera is active. Separate from `ClueText` to support the UX's Peek/Active state distinction.
 - **HuntStop.ClueText** — required clue body (varchar 280, moderated). Displayed in the ClueCard Active state.
 - **HuntStop.HintText** — optional hint text provided by the hunt creator. When present, the system offers hints to players after 3 unsuccessful scan attempts at this stop. When null, no hint is available.
@@ -548,12 +569,16 @@ Images are retained for Phase 2 vision analysis processing. EXIF extraction runs
 - `HuntStop(HuntId, TaagId)` — unique, prevents same Taag twice in one hunt
 - `Watchlist(TaagId)` — "who is watching this Taag?" Used on claim expiry/change to dispatch notifications
 - `Watchlist(PlayerId, TaagId)` — unique, prevents duplicate watchlist entries
+- `Taag(CloneGroupId) WHERE CloneGroupId IS NOT NULL` — partial index, "all Taags in this Clone Group"
+- `CloneGroup(NormalizedContent)` — unique, lookup by content to find/create group
+- `ScanEvent(TaagId, Location)` — supports Clone detection algorithm (distinct locations per Taag content)
+- `HuntStop(CloneGroupId) WHERE CloneGroupId IS NOT NULL` — partial index, "which hunts reference this Clone Group?"
 
-**Scan-time hunt check (3-step query):**
-1. Scan arrives → resolve QR content to TaagId via NormalizedContent lookup
-2. **Check joined hunts:** `SELECT hp.*, hs.SortOrder FROM HuntProgress hp JOIN HuntStop hs ON hs.HuntId = hp.HuntId AND hs.TaagId = @taagId WHERE hp.PlayerId = @playerId AND hp.CompletedAt IS NULL` — if match and `hs.SortOrder` is the next expected stop → advance `CurrentStopOrder`. If last stop → set `CompletedAt`, trigger completion celebration.
-3. **Check organic discovery (only if no joined-hunt match):** `SELECT h.*, hs.* FROM HuntStop hs JOIN Hunt h ON h.Id = hs.HuntId WHERE hs.TaagId = @taagId AND hs.SortOrder = 100 AND h.Status = 'Published' AND NOT EXISTS (SELECT 1 FROM HuntProgress hp WHERE hp.HuntId = h.Id AND hp.PlayerId = @playerId)` — if match, auto-create HuntProgress and return hunt info in ScanResultDto.
-4. **Geofence verification** (both paths): `ST_DWithin(taag.Location, @scanLocation, huntStop.GeofenceRadius)` — PostGIS distance check. If outside geofence radius, hunt progression is not advanced (scan still succeeds as a normal Taag scan).
+**Scan-time hunt check (3-step query, Clone-aware):**
+1. Scan arrives → resolve QR content to TaagId via NormalizedContent lookup. Also resolve CloneGroupId if `Taag.CloneGroupId IS NOT NULL`.
+2. **Check joined hunts:** `SELECT hp.*, hs.SortOrder FROM HuntProgress hp JOIN HuntStop hs ON hs.HuntId = hp.HuntId AND (hs.TaagId = @taagId OR hs.CloneGroupId = @cloneGroupId) WHERE hp.PlayerId = @playerId AND hp.CompletedAt IS NULL` — if match and `hs.SortOrder` is the next expected stop → advance `CurrentStopOrder`. If last stop → set `CompletedAt`, trigger completion celebration. Clone Group matches use `@cloneGroupId` (nullable — only checked when the scanned Taag belongs to a Clone Group).
+3. **Check organic discovery (only if no joined-hunt match):** Same query expanded with `OR hs.CloneGroupId = @cloneGroupId` for Clone Group first-stop discovery.
+4. **Geofence verification** (conditional): For `TaagId`-based stops: `ST_DWithin(taag.Location, @scanLocation, huntStop.GeofenceRadius)`. **For `CloneGroupId`-based stops: geofence check is skipped** — any location satisfies the stop (FR62).
 
 **Rationale:** Eight entities cover all MVP functionality including hunt tracking, watchlists, and community reporting. The model is normalized — no denormalization at MVP. Add materialized views or read models when query performance demands it, not before. Gap-based ordering is the simplest reorderable list pattern that doesn't require rewriting all rows on every move. HuntProgress is the minimum tracking entity needed for sequential hunt play — without it, the system cannot answer "which stop is this player on?"
 
@@ -731,6 +756,7 @@ These rules run in frontend CI, catching violations at build time.
 | GET | `/api/v1/admin/reports` | AdminOnly | List reports (filterable by status) |
 | PUT | `/api/v1/admin/reports/{reportId}` | AdminOnly | Update report status (Reviewed/Dismissed) |
 | PUT | `/api/v1/admin/taags/{taagId}/status` | AdminOnly | Change Taag status (Active/Suspended/Removed) |
+| POST | `/api/v1/admin/taags/{taagId}/clone` | AdminOnly | Manually flag a Taag as Clone (FR63). Creates or joins CloneGroup by NormalizedContent. Triggers reclassification flow if Taag was previously claimed. |
 | GET | `/health` | AllowAnonymous (not versioned) | Health check |
 
 **Response conventions:**
@@ -755,7 +781,7 @@ Client never sends a TaagId. QR content is the identifier from the client's pers
 
 **ScanResultDto (server → client):**
 ```
-outcome: ScanOutcome      — always present (firstDiscovery, unclaimedDiscovery, claimRenewal, collection)
+outcome: ScanOutcome      — always present (firstDiscovery, unclaimedDiscovery, claimRenewal, collection, cloneCollection)
 taag: TaagSummaryDto      — always present
 isNewDiscovery: bool      — always present
 previouslyScannedByUser: bool — true if requesting user has any prior ScanEvent for this Taag
@@ -781,7 +807,9 @@ huntProgress: {           — nullable (only if scan advanced a hunt)
 **TaagSummaryDto:**
 ```
 id: uuid
+type: string                    — "unique" or "clone"
 customName: string?
+cloneGroupId: uuid?             — populated when type is "clone"
 approximateLocation: string?    — neighborhood/city level (GPS truncated to 2 decimal places ~1.1km)
 claimStatus: string
 claimExpiresAt: DateTimeOffset?  — only populated when claimStatus is "claimed" by requesting user; client computes 7-day warning locally
@@ -846,7 +874,17 @@ public record ScanNotification(
     DateTimeOffset OccurredAt
 );
 ```
-All Channel messages are immutable records with `TraceId` and `OccurredAt`.
+**CloneReclassificationNotification (Phase 2):**
+```csharp
+public record CloneReclassificationNotification(
+    Guid TaagId,
+    Guid CloneGroupId,
+    Guid? PreviousControllerId,   // null if Taag was unclaimed at reclassification
+    string TraceId,
+    DateTimeOffset OccurredAt
+);
+```
+All Channel messages are immutable records with `TraceId` and `OccurredAt`. At MVP, only `ScanNotification` is used. `CloneReclassificationNotification` is added in Phase 2 when Clone detection is implemented. When 3+ distinct message types exist, evaluate adding typed message handling to the Channel consumer (ADR-2).
 
 **TanStack Query Key Conventions:**
 ```typescript
@@ -991,6 +1029,7 @@ TaagBack.Api/
 │       ├── HuntStopConfiguration.cs
 │       ├── HuntProgressConfiguration.cs
 │       ├── WatchlistConfiguration.cs
+│       ├── CloneGroupConfiguration.cs
 │       └── ReportConfiguration.cs
 │
 ├── Scanning/
@@ -1010,7 +1049,8 @@ TaagBack.Api/
 │       ├── TaagDetailDto.cs
 │       ├── TaagSummaryDto.cs
 │       ├── TaagNamingRequestDto.cs
-│       └── Taag.cs                       # Entity (includes Status: Active/Suspended/Removed/Ghost/Relic)
+│       ├── Taag.cs
+│       └── CloneGroup.cs                  # Entity — groups mass-produced Taags by NormalizedContent                       # Entity (Type: Unique/Clone; Status: Active/Suspended/Removed/Ghost/Relic)
 │
 ├── Hunts/
 │   ├── HuntsController.cs
@@ -1287,7 +1327,9 @@ PlayerService → (standalone)      (manages Player entity and profile)
 | Hunt Play (FR25-29) | `HuntsController.cs` | `HuntService.cs` | `HuntProgress.cs` | `HuntProgressDto` |
 | Leaderboards (FR30-33) | `LeaderboardController.cs` | `LeaderboardService.cs` | (aggregation queries) | `LeaderboardDto` |
 | Safety & Reporting (FR34-39) | `ReportsController.cs` | `ReportService.cs` | `Report.cs` | `ReportCreateDto` |
-| Auth & Accounts (FR40-47) | (middleware) | `PlayerService.cs` | `Player.cs` | `PlayerProfileDto` |
+| Clone Taag System (FR46, FR56-63) | `AdminController.cs` | `TaagService.cs` | `Taag.cs`, `CloneGroup.cs` | `TaagSummaryDto` (type, cloneGroupId fields) |
+| Auth & Accounts (FR42-45) | (middleware) | `PlayerService.cs` | `Player.cs` | `PlayerProfileDto` |
+| Data Integrity (FR64-66) | (middleware, `ScanService.cs`) | `ScanService.cs` | — | — |
 
 ### Architectural Guardrail Tests
 
@@ -1472,7 +1514,7 @@ The Step 6 project tree supports all architectural decisions. Feature folders (A
 
 ### Requirements Coverage Validation ✅
 
-**Functional Requirements Coverage (47/47):**
+**Functional Requirements Coverage (55/55):**
 
 | FR Range | Status | Architectural Support |
 |----------|--------|----------------------|
@@ -1487,7 +1529,8 @@ The Step 6 project tree supports all architectural decisions. Feature folders (A
 | FR34-FR38 | ✅ | IContentModerator, Report entity, admin endpoints, moderation-rejected Problem Details |
 | FR36-FR37 | ✅ | Admin endpoints added: `GET /admin/reports`, `PUT /admin/reports/{id}`, `PUT /admin/taags/{id}/status` |
 | FR39-FR43 | ✅ | Account required on first launch, age verification at registration, social login via Firebase Auth |
-| FR44-FR47 | ✅ | Anti-fraud in cross-cutting concerns, rate limiting per ADR-5 |
+| FR46, FR56-FR63 | ⬜ | Clone Taag System — post-MVP. Architectural hooks in data model (Taag.Type, CloneGroup entity, HuntStop.CloneGroupId) from Day 1. Detection algorithms, reclassification service, and Clone-to-unique promotion are Phase 2 implementation. |
+| FR64-FR66 | ✅ | Anti-fraud: impossible travel flagging, geofence verification, rate limiting per ADR-5 |
 | FR50-FR53 | ✅ | Image capture + async upload + EXIF extraction + triangulation. ScanImage entity, blob storage, MetadataExtractor |
 | FR54 | ⬜ | Phase 2 — External enrichment (reverse geocoding, POI) deferred |
 | FR55 | ⬜ | Phase 2/3 — Vision analysis deferred. Source images retained for future processing |
@@ -1540,6 +1583,7 @@ Naming conventions cover all layers. Process patterns cover all critical flows i
 - Hot-Taag contention under extreme concurrent scans — retry-once handles MVP scale, documented as first scaling bottleneck
 - UUIDv7 deep links are long — digital sharing hides URL behind preview cards, vanity URLs post-MVP
 - DisplayName discriminator (first 4 chars of PlayerId) — negligible collision risk at MVP scale
+- Clone Taag detection, reclassification, and Clone-to-unique promotion are post-MVP — data model includes `Taag.Type`, `Taag.CloneGroupId`, `CloneGroup` entity, and `HuntStop.CloneGroupId` from Day 1 schema to avoid migration complexity later
 - No in-app notification feed — push notifications only at MVP; persistent notification feed with read/unread states is Fast Follow
 - No hunt browse/discovery endpoint — hunts discovered organically via scanning or via deep links; spatial hunt discovery (`GET /api/v1/hunts?lat=&lng=&radiusMeters=`) is Fast Follow
 - No geographic leaderboard scope — leaderboards filtered by time period only (`week`, `month`, `alltime`); neighborhood/city/global filtering is Fast Follow

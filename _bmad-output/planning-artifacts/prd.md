@@ -18,6 +18,10 @@ classification:
   projectContext: 'greenfield'
 workflowType: 'prd'
 workflow_completed: true
+lastEdited: '2026-03-27'
+editHistory:
+  - date: '2026-03-27'
+    changes: 'Added Clone Taag feature area: new Taag type for mass-produced QR codes. Added FR46, FR56-FR63 (Clone Taag System). Renumbered FR47-49 to FR64-66. Added User Journey 6 (Clone Collector). Updated Executive Summary with Taag taxonomy and Clone data asset. Reframed duplicate detection as Clone classification in Success Criteria. Added Clone Taag innovation area. Expanded Phase 2 scoping with Clone Taag feature set.'
 ---
 
 # Product Requirements Document - TaagBack
@@ -27,7 +31,7 @@ workflow_completed: true
 
 ## Executive Summary
 
-TaagBack is a mobile-first platform that overlays a hidden game layer onto the world's existing QR code infrastructure. Using the TaagBack native app as a "magic lens," users scan any real-world QR code to discover, claim, name, and collect digital markers called "Taags" — competing on leaderboards, maintaining territory through monthly re-scans, and progressing through creator-built scavenger hunts. The platform targets three primary user archetypes: Adventurers (competitive seekers who climb leaderboards and defend territory), Wanderers (casual discoverers who encounter TaagBack through serendipitous QR scans), and Creators (players who graduate into building scavenger hunt experiences for others).
+TaagBack is a mobile-first platform that overlays a hidden game layer onto the world's existing QR code infrastructure. Using the TaagBack native app as a "magic lens," users scan any real-world QR code to discover, claim, name, and collect digital markers called "Taags" — competing on leaderboards, maintaining territory through monthly re-scans, and progressing through creator-built scavenger hunts. Taags exist in multiple types: unique Taags (claimable, nameable, location-bound), Ghost Taags (unclaimed codes awaiting discovery), Relic Taags (expired claims), and Clone Taags (mass-produced QR codes on product packaging, advertisements, and consumer goods — collectible but not claimable, enabling globally playable hunts). The platform targets three primary user archetypes: Adventurers (competitive seekers who climb leaderboards and defend territory), Wanderers (casual discoverers who encounter TaagBack through serendipitous QR scans), and Creators (players who graduate into building scavenger hunt experiences for others).
 
 TaagBack addresses a gap at the intersection of location-based entertainment and existing physical infrastructure. Billions of QR codes are deployed globally — on storefronts, transit stops, event booths, product packaging — yet every one is a static, one-dimensional link. Meanwhile, real-world interactive experiences (geocaching, location-based games) require deploying custom infrastructure at significant cost. No platform treats the world's existing QR codes as a ready-made interactive canvas. TaagBack enters a validated white space in the $6.18B location-based entertainment market with zero direct competitors offering QR-code-overlay scavenger hunts with a creator economy model.
 
@@ -39,7 +43,7 @@ The MVP rests on three self-reinforcing pillars: a **Hunt Builder** for sequenci
 
 **The Native App as Competitive Moat.** TaagBack intercepts QR codes at the decoder level, reading raw encoded data before URL resolution. This technical requirement is the moat — competitors cannot replicate the overlay without controlling the scan. The same physical code reveals two different realities depending on whether you scan with a standard camera or with TaagBack.
 
-**The Hidden Data Asset.** Users play a game; TaagBack builds the world's most comprehensive registry of physical QR code deployments. Every scan contributes location, URL metadata, business type, and scan patterns to a crowdsourced database with commercial intelligence value for retail analytics, city planners, and marketing agencies.
+**The Hidden Data Asset.** Users play a game; TaagBack builds the world's most comprehensive registry of physical QR code deployments. Every scan contributes location, URL metadata, business type, and scan patterns to a crowdsourced database with commercial intelligence value for retail analytics, city planners, and marketing agencies. Clone Taags amplify this asset — mass-produced codes scanned across geographies generate product distribution intelligence, retail foot traffic patterns, and consumer behavior data at a scale unique Taags cannot match.
 
 **Self-Healing Database.** The monthly re-scan maintenance mechanic simultaneously drives retention and data quality. Unclaimed Taags expire naturally, pruning dead entries without manual intervention — a structural advantage over platforms like Niantic's Wayfarer where nomination review backlogs are a documented community problem.
 
@@ -91,7 +95,7 @@ The MVP rests on three self-reinforcing pillars: a **Hunt Builder** for sequenci
 | **QR decode to result** | <2s end-to-end | Camera frame through API response to UI update. |
 | **API availability** | 99.5% uptime | Outdoor activity depends on connectivity. |
 | **GPS geofence accuracy** | 50m default radius | Balances anti-spoofing with real-world GPS drift. Configurable per stop. |
-| **Duplicate detection** | >95% catch rate | Mass-produced codes must be identified before polluting the databank. |
+| **Clone Taag classification accuracy** | >95% correct classification | Mass-produced codes must be correctly identified and classified as Clone Taags. False positives (unique Taags misclassified as Clone) must be <1%. |
 | **MVP infrastructure cost** | <$80/month | Validated $13-80/month. $0 with Microsoft for Startups credits. |
 
 ### Measurable Outcomes
@@ -181,6 +185,22 @@ The MVP rests on three self-reinforcing pillars: a **Hunt Builder** for sequenci
 
 **Capabilities Revealed:** Community reporting system, moderation queue, admin review tools, content policy enforcement, user warnings and escalation, filter improvement feedback loop.
 
+### Journey 6: The Clone Collector (Clone Taag Discovery & Reclassification)
+
+**Aisha, 19, College Freshman** — Active TaagBack player with 30+ claimed Taags. Grabs a snack from a campus vending machine and scans the QR code on the wrapper out of habit.
+
+**Opening Scene:** Aisha scans the QR code on a candy bar wrapper. It's the first time anyone has scanned this code in TaagBack. The system doesn't yet know it's mass-produced — it behaves like a normal Taag. Pioneer celebration! She names it "Snack Attack" and adds it to her collection. Business as usual.
+
+**Rising Action — Reclassification:** Over the next two weeks, 6 other players scan identical candy bar wrappers in different cities. The system's algorithmic detection triggers: same encoded content, geographically distinct locations. The Taag is reclassified as a Clone Taag. Aisha receives a push notification: "Taag Update: Your Taag 'Snack Attack' has been identified as a Clone Taag! It's now part of your Clone collection. Clone Taags are found across the world — you were one of the first to discover this one!" Her claim and custom name are released, but the Taag remains in her collection with a distinct Clone visual treatment.
+
+**Rising Action — Mixed Hunt:** The following week, Aisha joins a scavenger hunt called "Campus Fuel." It's a mixed hunt — location-based stops at campus landmarks interspersed with Clone Taag stops. Clue #4 reads: "Fuel up! Scan the back of any energy drink." Aisha grabs a drink from the nearest convenience store, scans it, and the Clone Group match triggers — stop complete. No geofence check needed. The next clue sends her back to a specific location on campus.
+
+**Climax:** Aisha checks her collection screen. She has a dedicated Clone section showing 12 Clone Taags across 4 product categories. She sees she's scanned one Clone type in 3 different states during a road trip. The collection feels like a passport — proof of where she's been and what she's encountered.
+
+**Resolution:** Aisha starts browsing "Play Anywhere" hunts — product-based Clone Taag hunts she can chip away at from anywhere. She joins "Snack Safari: Collect 20 Snack Brands" — a hunt with no locations, just products. She'll work on it for weeks across grocery stores, gas stations, and vending machines wherever she goes.
+
+**Capabilities Revealed:** Clone Taag detection and reclassification, reclassification notification, Clone collection with distinct visual treatment, mixed hunts (location + Clone stops), Clone Group matching for hunt stops, geofence bypass for Clone stops, location-independent hunts, "Play Anywhere" hunt browsing.
+
 ### Journey Requirements Summary
 
 | Journey | Key Capabilities Revealed |
@@ -190,6 +210,7 @@ The MVP rests on three self-reinforcing pillars: a **Hunt Builder** for sequenci
 | Creator Builds a Hunt | Dual creation modes (field + couch), clue writing, stop sequencing, deep link sharing, creator stats |
 | Contested Taag | Claim expiration, push notifications, re-claim flow, three-tier attribution, watchlist alerts |
 | Platform Moderation | Community reporting, moderation queue, admin tools, content enforcement, user escalation |
+| Clone Collector | Clone Taag detection, reclassification notification, Clone collection, mixed hunts, Clone Group matching, geofence bypass, location-independent hunts |
 
 ## Domain-Specific Requirements
 
@@ -245,7 +266,10 @@ TaagBack's core premise — treating the world's existing QR codes as a pre-buil
 Users play a game; TaagBack builds a commercial intelligence asset. The three MVP pillars (Hunt Builder, Taag Databank, Re-scan Retention) create a self-reinforcing flywheel where each pillar feeds the others. The re-scan maintenance mechanic simultaneously drives user retention AND data quality — a dual-purpose game mechanic with no equivalent in competing platforms.
 
 **Instant-On Crowdsourcing:**
-Niantic's Wayfarer requires nomination, community review, and approval (days to weeks). TaagBack's model is instant — scan a QR code and it exists in the system immediately. Automated validation (duplicate detection, location drift, URL parsing) replaces human review. This eliminates the bottleneck that limits Wayfarer's growth.
+Niantic's Wayfarer requires nomination, community review, and approval (days to weeks). TaagBack's model is instant — scan a QR code and it exists in the system immediately. Automated validation (Clone detection, location drift, URL parsing) replaces human review. This eliminates the bottleneck that limits Wayfarer's growth.
+
+**Clone Taags — Turning Fraud Detection Into a Feature:**
+Where every competitor treats mass-produced QR codes as noise to filter out, TaagBack reclassifies them as Clone Taags — a distinct collectible type that enriches gameplay and amplifies the platform's data asset. Clone Taags enable location-independent hunts playable globally ("Scan 10 snack brands"), turning everyday consumer products into game surfaces. The same detection algorithm that identifies mass-produced codes also feeds the platform's most commercially valuable data: product distribution patterns, retail foot traffic, and consumer behavior across geographies. The system is self-correcting — Clone Taags that prove to be location-locked (e.g., permanent storefront advertisements) automatically promote back to unique Taags through repeated same-location scans.
 
 ### Validation Approach
 
@@ -346,7 +370,11 @@ Niantic's Wayfarer requires nomination, community review, and approval (days to 
 - Auto-categorization of Taag types from URL analysis
 - Category-based badges and titles
 - Ghost Taag special visual treatment
-- Location drift detection and duplicate code detection hardening
+- Clone Taag classification system — algorithmic detection, brand URL pattern matching, admin flagging, Clone Group formation, reclassification notifications
+- Clone Taag collection — distinct visual treatment, Clone collection section, reclassification flow
+- Clone Taag hunt integration — Clone Group stops, geofence bypass for Clone stops, mixed hunts, location-independent "Play Anywhere" hunts
+- Clone-to-unique promotion — location-locked Clone instances promoted to unique Taags after repeated same-location scans
+- Location drift detection hardening
 - Taag expiration for unscanned codes
 - Hunt reviews and ratings
 - Local activity feed
@@ -449,12 +477,23 @@ Niantic's Wayfarer requires nomination, community review, and approval (days to 
 - FR44: The system can require age verification at account creation and enforce COPPA-compliant flows for users under 13.
 - FR45: Users can authenticate via email/password or social login (Google Sign-In, Apple Sign-In).
 
+### Clone Taag System
+
+- FR46: The system can detect and classify mass-produced QR codes as Clone Taags when the same encoded content is scanned at significantly different GPS locations (3-4 distinct locations triggers reclassification).
+- FR56: Clone Taags are collectible and appear in a user's collection but cannot be claimed, named, or controlled.
+- FR57: The system can detect mass-produced codes through three tiers: (a) algorithmic detection after N scans from geographically distinct locations, (b) brand URL pattern matching against known mass-produced domains, (c) manual admin flagging.
+- FR58: When a previously claimed Taag is reclassified as a Clone, the system releases the claim and name, converts the Taag type, and sends a notification to the previous claimant explaining the conversion. The Taag remains in the user's collection as a Clone.
+- FR59: The system groups Clone Taags sharing identical encoded content into a Clone Group.
+- FR60: The system can promote a Clone Taag instance back to a unique Taag when that specific instance accumulates N scans at the same GPS location (within configurable radius), indicating it is location-locked (e.g., a permanent advertisement on a storefront window).
+- FR61: Hunt stops can reference either a specific Taag instance or a Clone Group. When referencing a Clone Group, scanning any member of that group satisfies the stop.
+- FR62: Clone Taag hunt stops referencing a Clone Group do not require geofence verification, enabling location-independent hunts playable globally.
+- FR63: Admins can manually flag QR codes as mass-produced Clone Taags via admin tooling, seeding the Clone classification before algorithmic detection triggers.
+
 ### Data Integrity & Anti-Fraud
 
-- FR46: The system can detect and invalidate duplicate/mass-produced QR codes scanned at significantly different GPS locations (snack wrapper problem).
-- FR47: The system can flag impossible movement speeds between consecutive scans from the same user.
-- FR48: The system can verify physical presence via geofence check (GPS coordinates within configurable radius of stop location) before accepting a scan.
-- FR49: The system can enforce rate limiting on scan attempts per user.
+- FR64: The system can flag impossible movement speeds between consecutive scans from the same user.
+- FR65: The system can verify physical presence via geofence check (GPS coordinates within configurable radius of stop location) before accepting a scan.
+- FR66: The system can enforce rate limiting on scan attempts per user.
 
 ### Location Intelligence
 

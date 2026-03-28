@@ -1,5 +1,9 @@
 ---
 stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics', 'step-03-create-stories', 'step-04-final-validation']
+lastEdited: '2026-03-27'
+editHistory:
+  - date: '2026-03-27'
+    changes: 'Added Clone Taag System as Epic 8 (Phase 2): FR46 rewritten from invalidation to classification, FR56-FR63 added, FR47-49 renumbered to FR64-66. Epic 6 updated (FR46 moved to Epic 8, FR47 renumbered). Story 6.2 split (duplicate detection moved to Epic 8, impossible travel retained). Epic 1 Story 1.1 updated with CloneGroup entity and Taag.Type data model hooks. Additional Requirements updated for Architecture and UX Clone Taag additions.'
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/architecture.md'
@@ -62,10 +66,18 @@ This document provides the complete epic and story breakdown for TaagBack, decom
 - FR43: The system can require account creation on first app launch before allowing any platform interaction.
 - FR44: The system can require age verification at account creation and enforce COPPA-compliant flows for users under 13.
 - FR45: Users can authenticate via email/password or social login (Google Sign-In, Apple Sign-In).
-- FR46: The system can detect and invalidate duplicate/mass-produced QR codes scanned at significantly different GPS locations (snack wrapper problem).
-- FR47: The system can flag impossible movement speeds between consecutive scans from the same user.
-- FR48: The system can verify physical presence via geofence check (GPS coordinates within configurable radius of stop location) before accepting a scan.
-- FR49: The system can enforce rate limiting on scan attempts per user.
+- FR46: The system can detect and classify mass-produced QR codes as Clone Taags when the same encoded content is scanned at significantly different GPS locations (3-4 distinct locations triggers reclassification).
+- FR56: Clone Taags are collectible and appear in a user's collection but cannot be claimed, named, or controlled.
+- FR57: The system can detect mass-produced codes through three tiers: (a) algorithmic detection after N scans from geographically distinct locations, (b) brand URL pattern matching against known mass-produced domains, (c) manual admin flagging.
+- FR58: When a previously claimed Taag is reclassified as a Clone, the system releases the claim and name, converts the Taag type, and sends a notification to the previous claimant explaining the conversion. The Taag remains in the user's collection as a Clone.
+- FR59: The system groups Clone Taags sharing identical encoded content into a Clone Group.
+- FR60: The system can promote a Clone Taag instance back to a unique Taag when that specific instance accumulates N scans at the same GPS location (within configurable radius), indicating it is location-locked (e.g., a permanent advertisement on a storefront window).
+- FR61: Hunt stops can reference either a specific Taag instance or a Clone Group. When referencing a Clone Group, scanning any member of that group satisfies the stop.
+- FR62: Clone Taag hunt stops referencing a Clone Group do not require geofence verification, enabling location-independent hunts playable globally.
+- FR63: Admins can manually flag QR codes as mass-produced Clone Taags via admin tooling, seeding the Clone classification before algorithmic detection triggers.
+- FR64: The system can flag impossible movement speeds between consecutive scans from the same user.
+- FR65: The system can verify physical presence via geofence check (GPS coordinates within configurable radius of stop location) before accepting a scan.
+- FR66: The system can enforce rate limiting on scan attempts per user.
 - FR50: Users can capture an image of the QR code's surroundings during the scan process.
 - FR51: The system can upload scan images asynchronously without blocking the scan result flow.
 - FR52: The system can extract EXIF metadata (GPS coordinates, compass bearing, estimated distance) from scan images to triangulate Taag location.
@@ -119,7 +131,10 @@ This document provides the complete epic and story breakdown for TaagBack, decom
 - Health check endpoint: GET /health with DB connectivity, schema version, auth mode.
 - 8 architectural guardrail tests as Day 1 scaffold.
 - UUIDv7 primary keys (Guid.CreateVersion7). Gap-based SortOrder (100, 200, 300...) for hunt stops.
-- 9 core entities: Player, Taag, ScanEvent, ScanImage, Hunt, HuntStop, HuntProgress, Watchlist, Report.
+- 10 core entities: Player, Taag, ScanEvent, ScanImage, Hunt, HuntStop, HuntProgress, Watchlist, Report, CloneGroup.
+- Taag entity includes Type enum (Unique/Clone) and nullable CloneGroupId FK — included in Day 1 schema as data model hooks for Phase 2 Clone Taag System.
+- HuntStop entity includes nullable CloneGroupId FK (mutually exclusive with TaagId via check constraint) — for Phase 2 Clone Group hunt stops.
+- ScanOutcome enum includes CloneCollection — for Phase 2 Clone Taag scan handling.
 - Scan image capture + EXIF extraction via MetadataExtractor + Azure Blob Storage.
 - OpenAPI spec committed to repo → TypeScript type generation via openapi-typescript.
 - Spike task: verify expo-camera raw QR data behavior on Android before finalizing scanner library.
@@ -153,7 +168,8 @@ This document provides the complete epic and story breakdown for TaagBack, decom
 - Creator stats on hunt detail: X started | Y completed | Created date.
 - Deferred deep linking: hunt links should survive app install (best-effort via expo-linking).
 - Scan-to-result transition: purpose-built "decoding" animation, not generic spinner. QR code visually transforms into Taag card.
-- Taag card species: visual categories by type (Restaurant, Ghost, Transit, Retail, Art/Culture, Municipal, Unknown).
+- Taag card species: visual categories by type (Restaurant, Ghost, Clone, Transit, Retail, Art/Culture, Municipal, Unknown).
+- Clone Taag UX (Phase 2): Clone Teal accent (#5EEAD4), holographic shimmer visual treatment, Clone collection section with Clone Group view (grouped by product, scan count, location map), "Clone collected!" scan outcome, reclassification notification with positive framing, Clone-to-unique promotion celebration, "Play Anywhere" hunt discovery filter, hunt stop creation choice (specific instance vs Clone Group).
 - Three-tier attribution visual design: permanent discoverer (etched/immovable) vs. temporary controller/name (dynamic banner).
 - Context-aware emotional design: Discovery mode → emotion first; Maintenance mode → efficiency first; Creation mode → efficiency with creator celebrations.
 - Creation-mode efficiency: suppressed player celebrations during active draft scanning. Quick "Added as Stop N" confirmation.
@@ -211,10 +227,18 @@ This document provides the complete epic and story breakdown for TaagBack, decom
 - FR43: Epic 1 — Require account before any platform interaction
 - FR44: Epic 1 — Age verification and COPPA-compliant flows ⚠️ HIGH EFFORT
 - FR45: Epic 1 — Email/password and social login authentication
-- FR46: Epic 6 — Duplicate/mass-produced QR code detection
-- FR47: Epic 6 — Impossible travel speed flagging
-- FR48: Epic 1 — Geofence verification for scan claims
-- FR49: Epic 1 — Rate limiting on scan attempts
+- FR46: Epic 8 — Clone Taag detection and classification
+- FR56: Epic 8 — Clone Taag collection (collectible, not claimable/nameable)
+- FR57: Epic 8 — Three-tier Clone detection (algorithmic, brand URL, admin flagging)
+- FR58: Epic 8 — Clone reclassification flow with notification
+- FR59: Epic 8 — Clone Group formation (identical encoded content grouped)
+- FR60: Epic 8 — Clone-to-unique promotion (location-locked detection)
+- FR61: Epic 8 — Hunt stops referencing Clone Group or specific instance
+- FR62: Epic 8 — Clone Group hunt stops bypass geofence (location-independent hunts)
+- FR63: Epic 8 — Admin manual Clone flagging
+- FR64: Epic 6 — Impossible travel speed flagging
+- FR65: Epic 1 — Geofence verification for scan claims
+- FR66: Epic 1 — Rate limiting on scan attempts
 - FR50: Epic 7 — Capture image of QR code surroundings
 - FR51: Epic 7 — Async image upload without blocking scan flow
 - FR52: Epic 7 — EXIF metadata extraction for location triangulation
@@ -222,7 +246,7 @@ This document provides the complete epic and story breakdown for TaagBack, decom
 - FR54: Phase 2 — Taag profile enrichment from external sources (deferred)
 - FR55: Phase 2/3 — Vision analysis on scan images (deferred)
 
-**Coverage Summary:** 52 of 55 FRs mapped to MVP epics. 3 FRs deferred to Phase 2/3 (FR7, FR54, FR55).
+**Coverage Summary:** 52 of 63 FRs mapped to MVP epics (Epics 1-7). 9 FRs mapped to Phase 2 epic (Epic 8: Clone Taag System — FR46, FR56-FR63). 3 FRs deferred to Phase 2/3 without epic assignment (FR7, FR54, FR55). Note: FR46 data model hooks (Taag.Type, CloneGroup entity) are included in Epic 1 Story 1.1 schema to avoid migration complexity later.
 
 ## Epic List
 
@@ -230,7 +254,7 @@ This document provides the complete epic and story breakdown for TaagBack, decom
 
 A user can create an account (passport issuance), scan any QR code and experience ALL scan outcomes — pioneer celebration with naming, "darn!" moment with watchlist invitation, re-scan confirmation, and collection add. Basic collection view, Taag profile cards, geofence verification, rate limiting, and user reporting ensure the platform is trustworthy and safe from Day 1.
 
-**FRs covered:** FR1, FR2, FR3, FR4, FR5, FR6, FR8, FR9, FR10, FR37, FR38, FR41, FR42, FR43, FR44, FR45, FR48, FR49 (18 FRs)
+**FRs covered:** FR1, FR2, FR3, FR4, FR5, FR6, FR8, FR9, FR10, FR37, FR38, FR41, FR42, FR43, FR44, FR45, FR65, FR66 (18 FRs)
 
 **High-effort FRs:** FR44 (COPPA age gate + VPC flows), celebration UX layer (CelebrationOverlay, ScanTransition, sound design spans multiple FRs)
 
@@ -295,13 +319,14 @@ Players can discover hunts organically through Taag scans, accept invitations, p
 
 ### Epic 6: Safety & Platform Integrity
 
-Admins can review the moderation queue, act on reports, reset Taag names, issue warnings, and restrict accounts. The platform detects duplicate/mass-produced QR codes and flags impossible travel speeds.
+Admins can review the moderation queue, act on reports, reset Taag names, issue warnings, and restrict accounts. The platform flags impossible travel speeds between consecutive scans.
 
-**FRs covered:** FR39, FR40, FR46, FR47 (4 FRs) + NFR17 (data deletion)
+**FRs covered:** FR39, FR40, FR64 (3 FRs) + NFR17 (data deletion)
 
 **Implementation notes:**
 - Admin tooling via direct API calls — no admin UI at MVP. The sole admin is the developer.
-- Duplicate QR detection ("snack wrapper problem") and impossible travel flagging are algorithmic hardening.
+- Impossible travel flagging is algorithmic hardening.
+- Clone Taag detection (formerly "snack wrapper problem") has been elevated to its own epic (Epic 8) as a Phase 2 feature area.
 - **Flexible scheduling.** High standalone viability, no dependency load. Can slide in the schedule without affecting other epics. Ideal for filling gaps between other epics or post-launch hardening.
 
 ### Epic 7: Location Intelligence & Scan Imagery
@@ -314,6 +339,23 @@ Users can capture images of QR code surroundings, and the system extracts EXIF m
 - Architecture: ScanImage entity, Azure Blob Storage / MinIO, MetadataExtractor for EXIF extraction, triangulation service.
 - UX: post-celebration optional prompt ("Help TaagBack see what's around this Taag"), framed as contribution, async upload.
 - **Strategic sleeper.** Low immediate user impact but highest strategic value — builds the hidden data asset. Can be deprioritized for launch and shipped post-launch without affecting user experience.
+
+### Epic 8: Clone Taag System (Phase 2)
+
+The platform detects mass-produced QR codes (snack wrappers, drink bottles, chain advertisements) and classifies them as Clone Taags — a new Taag type that is collectible and usable in scavenger hunts but cannot be claimed, named, or controlled. Clone Taags are grouped into Clone Groups by identical encoded content. Hunt stops can reference a Clone Group, enabling location-independent "Play Anywhere" hunts playable globally. Clone Taags that prove to be location-locked (repeated scans at the same GPS location) can be promoted back to unique Taags. The system amplifies TaagBack's strategic data asset — Clone Taag scans generate product distribution intelligence, retail foot traffic patterns, and consumer behavior data.
+
+**FRs covered:** FR46, FR56, FR57, FR58, FR59, FR60, FR61, FR62, FR63 (9 FRs)
+
+**Dependencies:** Epic 1 (Taag entity, scan pipeline), Epic 3 (push notification infrastructure for reclassification notifications), Epic 5 (hunt stop mechanics for Clone Group stops and geofence bypass)
+
+**Implementation notes:**
+- Architecture: CloneGroup entity, Taag.Type enum (Unique/Clone), HuntStop.CloneGroupId nullable FK, Clone state machine (Unique→Clone reclassification, Clone→Unique promotion), CloneReclassificationNotification channel message, admin Clone flagging endpoint.
+- Data model hooks (Taag.Type, CloneGroupId, CloneGroup entity, HuntStop.CloneGroupId) are included in Epic 1's Day 1 schema to avoid migration complexity.
+- UX: Clone Teal accent color (#5EEAD4), holographic shimmer visual treatment, Clone collection section, "Clone collected!" scan outcome, reclassification notification with positive framing, Clone-to-unique promotion celebration, "Play Anywhere" hunt discovery filter, hunt stop creation choice (specific instance vs Clone Group).
+- Three-tier detection: (a) algorithmic after 3-4 scans from distinct GPS locations, (b) brand URL pattern matching for known mass-produced domains, (c) manual admin flagging via `POST /admin/taags/{taagId}/clone`.
+- Scan-time hunt check updated to match on both TaagId and CloneGroupId. Geofence check skipped for CloneGroupId-based stops.
+- **Phase 2 epic — not in MVP scope.** All Clone Taag functionality is post-MVP. However, the data model hooks ship with Epic 1 to prevent schema migration complexity when this epic is implemented.
+- **High strategic value.** Transforms a fraud-detection problem into a feature that amplifies the platform's most valuable asset (crowdsourced QR code registry). Clone Taag scans generate commercially valuable data: product distribution patterns, retail foot traffic, consumer behavior across geographies.
 
 ### Phase 2/3 Features (Not in MVP Epics)
 
@@ -345,7 +387,8 @@ So that all subsequent stories have a working backend foundation to build on.
 **Given** the re-scaffolded project
 **When** the database layer is configured
 **Then** `TaagBackDbContext` uses EF Core with Npgsql + NetTopologySuite for PostGIS support
-**And** Player, Taag, and ScanEvent entities exist with UUIDv7 primary keys, `IEntityTypeConfiguration<T>` fluent API configuration, and all indexes per Architecture doc
+**And** Player, Taag, ScanEvent, and CloneGroup entities exist with UUIDv7 primary keys, `IEntityTypeConfiguration<T>` fluent API configuration, and all indexes per Architecture doc
+**And** Taag entity includes `Type` enum (Unique/Clone, default Unique) and nullable `CloneGroupId` FK to CloneGroup — Phase 2 data model hooks included in Day 1 schema
 **And** Taag.NormalizedContent has a unique index, Taag.Location has a GiST spatial index, ScanEvent.IdempotencyKey has a unique index
 
 **Given** the database entities
@@ -489,7 +532,7 @@ So that I can discover what's hidden behind every QR code I encounter.
 **And** the normalized content is used as the primary lookup key against `Taag.NormalizedContent` unique index
 
 **Given** a scan request with GPS coordinates
-**When** geofence verification runs (FR48)
+**When** geofence verification runs (FR65)
 **Then** the system validates physical presence via `ST_DWithin` PostGIS distance check using the configurable geofence radius (default 50m)
 **And** scans outside the geofence radius are still recorded but flagged
 
@@ -501,7 +544,7 @@ So that I can discover what's hidden behind every QR code I encounter.
 **And** the Taag's location is not updated from a null-GPS scan
 
 **Given** an authenticated user submits a scan
-**When** rate limiting is evaluated (FR49)
+**When** rate limiting is evaluated (FR66)
 **Then** the scan endpoint enforces token bucket 30/min per authenticated user
 **And** rate-limited requests return 429 — client handles with silent retry and backoff (never shown to user)
 
@@ -730,8 +773,8 @@ That's all 8 stories for Epic 1. Let me verify FR coverage:
 | FR43 (require account) | 1.3 | ✓ |
 | FR44 (COPPA age gate) | 1.3 | ✓ |
 | FR45 (social login) | 1.3 | ✓ |
-| FR48 (geofence) | 1.4 | ✓ |
-| FR49 (rate limiting) | 1.4 | ✓ |
+| FR65 (geofence) | 1.4 | ✓ |
+| FR66 (rate limiting) | 1.4 | ✓ |
 
 **All 18 FRs covered. 8 stories. Each independently completable in sequence.**
 
@@ -1263,21 +1306,17 @@ So that the platform remains safe and compliant.
 **Then** no admin UI exists at MVP — all operations via direct API calls (Postman/curl)
 **And** admin operations are logged at `Information` level with admin PlayerId and action details
 
-### Story 6.2: Anti-Fraud Detection
+### Story 6.2: Anti-Fraud Detection — Impossible Travel Flagging
 
 As the platform,
-I want to detect duplicate QR codes scanned at different locations and flag impossible travel between scans,
+I want to flag impossible travel speeds between consecutive scans,
 So that the databank maintains integrity and leaderboards reflect real-world effort.
+
+**Note:** Duplicate/mass-produced QR code detection (formerly FR46 "snack wrapper problem") has been elevated to Epic 8: Clone Taag System (Phase 2). Rather than flagging and invalidating mass-produced codes, the system now classifies them as Clone Taags — a collectible Taag type. See Epic 8 for full Clone detection, reclassification, and Clone Group mechanics.
 
 **Acceptance Criteria:**
 
-**Given** a QR code that has been scanned at significantly different GPS locations (FR46)
-**When** ≥3 scans of the same NormalizedContent have locations >500m from the centroid of all scan locations for that Taag
-**Then** the Taag is flagged with `IntegrityFlag = DuplicateSuspect`
-**And** flagged Taags are marked for admin review but not automatically removed
-**And** duplicate detection is inline — a lightweight `ST_DWithin` query against existing ScanEvents during the scan pipeline (not a batch job)
-
-**Given** a user submits scans with impossible movement speeds (FR47)
+**Given** a user submits scans with impossible movement speeds (FR64)
 **When** haversine distance / time between consecutive ScanEvents from the same user exceeds 300 km/h (accommodates high-speed rail, flags teleportation)
 **Then** the scans are flagged for review
 **And** the user is not blocked — flags are for admin investigation
@@ -1286,7 +1325,7 @@ So that the databank maintains integrity and leaderboards reflect real-world eff
 
 **Given** anti-fraud detection
 **When** it runs
-**Then** duplicate detection is inline (lightweight query). Travel speed check is async (via Channel).
+**Then** travel speed check is async (via Channel).
 **And** false positive rate is prioritized — better to miss some fraud than to penalize legitimate users
 **And** flagged items surface in `GET /api/v1/admin/reports` alongside user-submitted reports — `TargetType = Taag`, `Reason = SystemFlagged`
 

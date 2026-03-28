@@ -1,6 +1,10 @@
 ---
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 workflow_completed: true
+lastEdited: '2026-03-27'
+editHistory:
+  - date: '2026-03-27'
+    changes: 'Added Clone Taag UX feature area: visual treatment (holographic shimmer, Clone Teal accent), Taag lifecycle definition, reclassification notification flow, map pin state, TaagCard state, collection filters, hunt health considerations, implementation priority items, sound/haptic bindings, known risks.'
 inputDocuments:
   - '_bmad-output/planning-artifacts/product-brief-TaagBack-2026-03-10.md'
   - '_bmad-output/planning-artifacts/prd.md'
@@ -121,7 +125,7 @@ The app operates in **three distinct user modes**, each with different emotional
 
 3. **The World Is the Game Board** — For players, the physical world is the primary interface — minimize screen time, maximize looking-up time. For creators, the app provides two lenses into that same game board: the field view (world as interface) and the map view (app as interface). Both are valid modes of engagement.
 
-4. **Every Outcome Is an Invitation** — No scan should feel wasted. Unclaimed Taag? Pioneer celebration. Already claimed? Watchlist invitation. Part of a hunt? Hunt discovery. Already owned? Claim refresh with territorial context. Flagged duplicate? Graceful "nice try, detective" explanation. Validation failure? Friendly recovery. Every outcome opens a new engagement path.
+4. **Every Outcome Is an Invitation** — No scan should feel wasted. Unclaimed Taag? Pioneer celebration. Already claimed? Watchlist invitation. Part of a hunt? Hunt discovery. Already owned? Claim refresh with territorial context. Clone Taag? "Clone collected!" with distinct holographic treatment — added to your Clone collection, breadth celebrated. Validation failure? Friendly recovery. Every outcome opens a new engagement path.
 
 5. **Reveal, Don't Explain** — Features are discovered through play, not tutorials. When something new happens (a hunt invitation, a claim expiry, a leaderboard shift), the UX makes the concept self-evident through the experience itself. Complexity is revealed, never imposed.
 
@@ -163,6 +167,11 @@ The app operates in **three distinct user modes**, each with different emotional
 | Context-aware app landing (intent detection) | High |
 | Pioneer Phase UX (cold-start builder framing) | High |
 | Territory Mode (post-discovery engagement shift) | High |
+| Clone Taag collection section + holographic visual treatment | Med |
+| Clone Taag reclassification notification flow | Med |
+| Clone Taag scan outcome ("Clone collected!") | Low-Med |
+| "Play Anywhere" hunt browsing filter (location-independent hunts) | Med |
+| Clone-to-unique promotion celebration | Low |
 | Maintenance batching + Territory Reports + route suggestions | High |
 | Creator On-Ramp with pre-populated routes | High |
 
@@ -175,6 +184,7 @@ The app operates in **three distinct user modes**, each with different emotional
 | **Scan Fatigue** — Local codes exhausted after weeks | Territory Mode shifts to defend/compete/create | Post-MVP |
 | **Creator Cliff** — Inspiration doesn't convert to creation | Creator On-Ramp with pre-populated routes | Post-MVP |
 | **Notification Numbness** — Maintenance scales linearly, attention doesn't | Territory Reports + Maintenance Run batching | Post-MVP |
+| **Clone Reclassification Sting** — Player loses claim when Taag converts to Clone | Positive framing ("you were one of the first!"), Taag stays in collection, batch notifications for multiple reclassifications | Post-MVP |
 
 ## Desired Emotional Response
 
@@ -513,6 +523,7 @@ This aesthetic resonates across generations: Gen-Z sees it as "vintage cool" and
 |----------|--------------|-------------------|
 | Restaurant/Food | Diner menu typography, warm cream card stock | Warm amber |
 | Ghost (defunct) | Faded, partially transparent, ethereal | Cool gray-blue, desaturated |
+| Clone (mass-produced) | Holographic shimmer, translucent, multiplied/echoed edges | Cool cyan-teal, iridescent |
 | Transit | Ticket stub, perforated edges | Industrial yellow |
 | Retail | Price tag aesthetic, bold block text | Bright, commercial |
 | Art/Culture | Gallery placard, elegant but textured | Muted earth tones |
@@ -645,7 +656,7 @@ Six signature components that define the brand experience:
 TaagCard variant selection (stamp vs. pencil sketch vs. faded) depends on a `userRelationship` field in `TaagSummaryDto` from the API, returning one of: `pioneered`, `claimed`, `visited`, `watchlisted`, `none`. This field is computed server-side from ScanEvents and Watchlist data for the requesting user.
 
 **Component Variants:**
-- TaagCard variants: Owned (full stamp), Visited (pencil sketch), Claimed-by-other (faded), Ghost (glitch effect)
+- TaagCard variants: Owned (full stamp), Visited (pencil sketch), Claimed-by-other (faded), Ghost (glitch effect), Clone (holographic shimmer)
 - CelebrationOverlay variants: Pioneer (confetti + fanfare), Re-scan (subtle pulse), Hunt Complete (blackout crescendo), Milestone (passport cover evolution)
 - ClueCard variants: Locked (mysterious), Active (readable), Solved (stamped)
 
@@ -796,9 +807,18 @@ TaagBack's defining experience is a three-beat sequence: (1) Scan any real-world
 
 **Relic Taag** — Physical code no longer exists in the real world. Preserved only in TaagBack's databank. The last person to scan it before it disappeared receives "Last Guardian" status with a frozen permanent claim. Collecting Relics is a bragging right — proof you were out there scanning before things disappeared. The rarer they become, the more valuable your collection. "Urban Archaeologist" and "Relic Hunter" badge paths.
 
+**Clone Taag** — Mass-produced QR code found on product packaging, consumer goods, chain restaurant advertisements, and other commercially distributed items. The same encoded content exists on thousands or millions of identical products. Clone Taags are collectible but cannot be claimed, named, or controlled. They appear in a dedicated Clone section of the player's collection with a distinct visual treatment — translucent, holographic, multiplied. Clone Taags enable location-independent "Play Anywhere" hunts playable globally. Collecting Clones is about *breadth* — "I've found this Clone in 7 states" — not territorial ownership. "Globe Trotter" and "Brand Hunter" badge paths.
+
+**Clone Group** — All Clone Taags sharing identical encoded content are grouped into a Clone Group. The Clone collection screen organizes Taags by Clone Group — each group shows as a single entry with a count ("Scanned in 7 locations") and a map of where the player has encountered it. Expanding a group reveals individual scan instances with timestamps and locations. Hunt stops can reference either a specific Clone Taag instance (any single code at a known location) or an entire Clone Group (any copy of that product's code anywhere satisfies the stop).
+
+**Clone-to-Unique Promotion** — A Clone Taag instance that accumulates N scans at the same GPS location (within configurable radius) proves it is location-locked — e.g., a permanent Coca-Cola advertisement on a storefront window. The system promotes it back to a unique Taag, making it claimable and nameable. The promotion is celebrated: "This Clone just earned its identity! It's now a unique Taag — claim it!"
+
+**Clone Reclassification Flow** — When a previously claimed unique Taag is reclassified as a Clone (after the system detects mass-produced duplicates), the previous claimant receives a push notification with positive framing: "Taag Update: Your Taag '[name]' has been identified as a Clone Taag! It's now part of your Clone collection. Clone Taags are found across the world — you were one of the first to discover this one!" Claim and custom name are released. The Taag remains in the user's collection with Clone visual treatment. The emotional design must frame this as a *discovery*, not a *loss*.
+
 **Detection methods:**
 - Ghost: Backend URL crawling detects dead links/closed businesses. Google Places API confirms permanently closed status.
 - Relic: Passive detection after N months with zero scans from anyone + community reporting ("This code doesn't exist anymore").
+- Clone: Three-tier detection — (a) algorithmic after 3-4 scans from geographically distinct locations, (b) brand URL pattern matching against known mass-produced domains (pepsi.com, coca-cola.com, mars.com, etc.), (c) manual admin flagging via admin tooling to seed the Clone database.
 
 ### 7.8 Context-Aware Scan Responses
 
@@ -872,6 +892,7 @@ The app detects local density and adjusts nudges, messaging, and feature emphasi
 | Hunt Green | `accent-hunt` | ~#4ADE80 | Adventure, curiosity | Follow clues, complete hunts |
 | Alert Amber | `accent-alert` | ~#FB923C | Urgency, time pressure | Re-scan, maintain, return |
 | Ghost Purple | `accent-ghost` | ~#A78BFA | Mystery, intrigue, rarity | Collect rarities, explore history |
+| Clone Teal | `accent-clone` | ~#5EEAD4 | Abundance, travel, breadth | Collect clones, play anywhere |
 
 **Color Lifecycle Progression:**
 The dominant accent color a user sees naturally shifts as they mature — an emergent property of the game mechanics:
@@ -880,8 +901,9 @@ The dominant accent color a user sees naturally shifts as they mature — an eme
 - **Regular user:** Claim Cyan dominates their collection (ownership, pride)
 - **Power user:** Alert Amber appears (claims to maintain) + Hunt Green (hunts to build/play)
 - **Veteran:** Ghost Purple and Relic states emerge (the collector's endgame)
+- **Everywhere user:** Clone Teal appears as they scan mass-produced products across locations — the traveler's signature color
 
-If a user opens the app and their screen is dominated by Ghost Purple, they've been playing for a LONG time. The color tells their story.
+If a user opens the app and their screen is dominated by Ghost Purple, they've been playing for a LONG time. If Clone Teal dots their collection across multiple cities, they've been *everywhere*. The color tells their story.
 
 **Semantic Colors:**
 
@@ -1058,6 +1080,7 @@ Each accent color has a complete sensory binding — color + sound + haptic = un
 | Hunt Green | Adventure fanfare | Rising crescendo pulses | Clue unfold / progress fill |
 | Alert Amber | Warm clock chime | Two slow pulses (tick... tick...) | Subtle breathing animation (slow brightness pulse) |
 | Ghost Purple | Eerie whisper tone | Soft lingering vibration | Glitch shimmer / static crackle |
+| Clone Teal | Digital echo / reverb chirp | Quick triple-tap (multiplied feel) | Holographic shimmer / prismatic edge ripple |
 
 ### 8.8 Collection Display Modes
 
@@ -1097,6 +1120,7 @@ Map pins use three visual dimensions to handle 6-7 Taag states without color ove
 | Unclaimed Taag | Ghost Purple | Circle outline | 60%, no fill — the invitation |
 | Ghost Taag | Ghost Purple | Diamond + glitch texture | 80%, static shimmer |
 | Relic Taag | Ghost Purple | Cracked/broken shape | 40%, faded |
+| Clone Taag | Clone Teal | Echoed/doubled circle | 70%, holographic shimmer |
 | Active hunt stop | Hunt Green | Pulsing circle | 100%, pulsing animation |
 | Completed hunt stop | Hunt Green | Checkmark overlay | 70%, settled |
 
@@ -1615,6 +1639,7 @@ Brand-defining components with custom behavior, animation, and state management.
 | Fresh (just scanned) | Pioneer Gold "fresh ink" glow fading over ~5s | Sticker | 1 |
 | Ghost | Glitch shimmer overlay, Ghost Purple glow | Terminal + glitch distortion | 2 |
 | Relic | Cracked/aged texture, amber-tinted, sepia | Terminal + broken edge | 2 |
+| Clone | Holographic shimmer overlay, Clone Teal glow, echoed/doubled edge effect | Sticker (translucent) | 2 |
 | Unclaimed | Ghost Purple outline, "?" watermark interior | Sticker (invitation) | 2 |
 | Hunt-stamp | Hunt completion stamp with template graphic, completion date, creator attribution | Sticker | 2 |
 
@@ -1636,7 +1661,7 @@ Brand-defining components with custom behavior, animation, and state management.
 - Detail: Full animation, glow, shimmer, flip. Only renders one at a time.
 - Static: Context-free rendering for notifications, share previews, future widgets. No hooks, no context, no animation. Phase 4.
 
-**Accessibility:** Centralized label generation in Base. Accessible label adapts per context wrapper: Grid = "[name], [state], tap to view." Result = "[name], claimed by [player], [actions]." ListItem = "Rank [n], [name], [score]." Ghost/Relic/hunt-stamp status announced in label. Decay meter state as text: "Claim expires in [n] days."
+**Accessibility:** Centralized label generation in Base. Accessible label adapts per context wrapper: Grid = "[name], [state], tap to view." Result = "[name], claimed by [player], [actions]." ListItem = "Rank [n], [name], [score]." Ghost/Relic/Clone/hunt-stamp status announced in label. Decay meter state as text: "Claim expires in [n] days."
 
 #### 11.3.2 CelebrationOverlay
 
@@ -1797,7 +1822,7 @@ These are documented patterns built from foundation components, not custom libra
 - **Gate: Loop-complete before proceeding.** User can scan, see result, view collection, scan again, see leaderboard, find a hunt, complete a hunt. All with Tier 1 celebrations.
 
 **Phase 2 — Experience Components (~2-3 weeks)**
-- TaagCardBase remaining states (Ghost, Relic, Unclaimed, Hunt-stamp)
+- TaagCardBase remaining states (Ghost, Relic, Clone, Unclaimed, Hunt-stamp)
 - TaagCardPopup (for map)
 - TaagCard Detail variant with flip interaction (front=stamp, back=data)
 - Decay meter on TaagCardBase (claimed-by-other)
@@ -2106,7 +2131,7 @@ Simple yes/no at high engagement moments. Never more than two options at an emot
 ### 12.8 Search & Filtering Patterns
 
 **Gallery Mode Visual Filters (Phase 2):**
-- Filter chips above collection: Mine, Others', Ghost, Relic, Hunt Stops.
+- Filter chips above collection: Mine, Others', Clone, Ghost, Relic, Hunt Stops.
 - Selecting a filter DIMS non-matching Taags — does NOT hide. Sticker bomb preserved.
 - **Two-tier dimming:** Standard users: 30% opacity. Accessibility mode (large text or screen reader active): 60% opacity + desaturated border. Filtering communicated through emphasis on matches, not just suppression.
 - Multiple filters selectable (additive). "Show All" chip always visible.
@@ -2119,6 +2144,7 @@ Simple yes/no at high engagement moments. Never more than two options at an emot
 **Hunt Discovery Filters — Fast Follow:**
 MVP hunt discovery is organic (scanning a Taag that's part of a hunt) and via deep links (shared hunt URLs). The browse/filter experience below is deferred to Fast Follow, when the spatial hunt discovery endpoint (`GET /api/v1/hunts?lat=&lng=&radiusMeters=`) and Hunts tab are available.
 - Distance (nearby/city/any), length (quick 2-3/medium 4-6/epic 7+), status (unstarted/in-progress/completed).
+- **Hunt type: "Local" vs "Play Anywhere."** Local hunts are location-bound. "Play Anywhere" hunts contain Clone Group stops playable from any location — surfaced prominently so players in any geography can find them. Visual distinction: "Play Anywhere" badge (Clone Teal) on hunt list items.
 - Filter BottomSheet with chip selection + Apply button.
 
 **Leaderboard Filters:**
@@ -2160,6 +2186,13 @@ MVP uses push notifications only (fire-and-forget via OS notification tray). The
 - Creator notification: "[Hunt Name] health alert: Stop [n] hasn't been scanned in 30 days. Is it still there?"
 - Creator actions: confirm fine, replace stop with another Taag, remove stop from hunt.
 - If Taag transitions to Relic: automatic creator notification.
+- If Taag transitions to Clone: creator notification with context. "A stop in [Hunt Name] uses a Clone Taag — this is a mass-produced code that may not stay at this location. Consider updating the clue to reflect this, or accept that players may find it elsewhere."
+- Clone Taag hunt stops referencing a Clone Group: no location health monitoring needed (location-independent by design).
+
+**Clone Taag Hunt Stop Creation:**
+When a hunt creator adds a Clone Taag as a stop, the system presents a choice:
+- **"This exact code"** — References the specific Clone instance at this location. Works like any other hunt stop. Creator warned: "This is a Clone Taag — it may not stay at this location."
+- **"Any copy of this product"** — References the Clone Group. Any player scanning any instance of this Clone Group satisfies the stop. No geofence check. Creator writes a clue like "Scan any [product name]" instead of a location-based clue. Enables location-independent "Play Anywhere" hunts.
 - Player-facing: "Heads up — one stop in this hunt may have moved. The creator has been notified."
 
 ### 12.11 Design System Integration
@@ -2397,3 +2430,24 @@ The following changes were applied to this UX spec based on a cross-functional a
 8. **Hunt category** — Removed from creation form at MVP. Added when hunt browse is implemented.
 9. **Hunt progress display** — Fixed internal contradiction. "2 of 5 stops found!" wireframe artifact replaced with `progressPhase` approach (early/middle/late/final). No numeric counter during active play. `totalStops` revealed only at hunt completion.
 10. **Cognitive accessibility** — Updated from "5 tabs" to "4 tabs" for consistency.
+
+## Clone Taag UX Update (2026-03-27)
+
+The following changes were applied to this UX spec based on a party mode discussion between Product Manager, UX Designer, Business Analyst, and Architect regarding the Clone Taag feature area. Clone Taags are a new Taag type for mass-produced QR codes (product packaging, consumer goods, chain advertisements) that are collectible and usable in scavenger hunts but cannot be claimed, named, or controlled.
+
+**Changes applied to this UX document:**
+1. **Taag Lifecycle (Section 7.7)** — Added Clone Taag definition, Clone-to-unique promotion mechanic, reclassification flow with positive emotional framing, and three-tier detection methods.
+2. **Experience Principle #4** — Updated "Every Outcome Is an Invitation" to replace duplicate rejection with Clone collection as a positive scan outcome.
+3. **Taag Card Species** — Added Clone visual category (holographic shimmer, translucent, cool cyan-teal iridescent).
+4. **Accent Palette** — Added Clone Teal (`accent-clone`, ~#5EEAD4) with sound signature (digital echo/reverb chirp), haptic (quick triple-tap), and visual animation (holographic shimmer/prismatic edge ripple).
+5. **Color Lifecycle Progression** — Added Clone Teal as the "everywhere user" color, representing geographic breadth.
+6. **Map Pin State Matrix** — Added Clone Taag pin (Clone Teal, echoed/doubled circle, 70% opacity, holographic shimmer).
+7. **TaagCardBase States** — Added Clone state (holographic shimmer overlay, Clone Teal glow, echoed/doubled edge effect, Sticker translucent corners, Phase 2).
+8. **Accessibility labels** — Added Clone to state announcements.
+9. **Collection Filters** — Added Clone to filter chips.
+10. **Implementation Priority** — Added Clone Taag items to Post-MVP table (collection section, reclassification notification, scan outcome, "Play Anywhere" hunt filter, promotion celebration).
+11. **Hunt Health & Integrity** — Added Clone Taag reclassification notification for hunt creators, Clone Group stops exempt from location monitoring, and Clone Taag hunt stop creation UX (specific instance vs Clone Group choice).
+12. **Known Risks** — Added Clone Reclassification Sting risk with positive-framing mitigation.
+13. **Component references** — Updated TaagCard variant lists and phase implementation lists to include Clone state.
+14. **Clone Group UX** — Added Clone Group collection view (grouped by product, scan count, location map) and hunt stop creation choice (specific instance vs Clone Group).
+15. **Hunt Discovery Filters** — Added "Play Anywhere" hunt type filter with Clone Teal badge for location-independent hunts.
